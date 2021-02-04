@@ -5,7 +5,8 @@
   @brief   web server ctrl I/O
  ******************************************************************************
   Board:
-    - Developped on
+    - Developped on teensy 4.1
+    - CPU speed 600MHz
   Info programming:
     -
   References C++:
