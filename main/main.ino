@@ -28,22 +28,24 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 </html> )rawliteral";
 
+// Constants
+const uint8_t ledPin =  LED_BUILTIN;  // the number of the LED pin
 
 const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-
 EthernetServer server(80);
 
-const uint8_t ledPin =  LED_BUILTIN;  // the number of the LED pin
-uint8_t ledState = LOW;               // ledState used to set the LED
-
 //Variables
+String password = "123456";
+uint8_t ledState = false;               // ledState used to set the LED
+
 bool luci_ant = false;
 bool luci_post = false;
 
-int status1 = LOW;
-int status2 = LOW;
-int status3 = LOW;
-int status4 = LOW;
+bool status1 = false;
+bool status2 = false;
+bool status3 = false;
+bool status4 = false;
+bool status5 = false;
 
 float v1 = 0;
 float v2 = 0;
@@ -94,33 +96,11 @@ void webServer() {
         //generate HTML page
         if (c == '\n') {
 
-          //Read command and change port status
-          if (readString.indexOf("?b1") > 0) {
-            //digitalWrite(switch1, !status1);
-            //status1 = digitalRead(switch1);
-            status1 = !status1;
+          if (readString.indexOf("?pwd=" + password) > 0) {
+            status5 = true;
           }
-          if (readString.indexOf("?b2" ) > 0) {
-            //digitalWrite(switch2, !status2);
-            //status2 = digitalRead(switch2);
-            status2 = !status2;
-          }
-          if (readString.indexOf("?b3") > 0) {
-            //digitalWrite(switch3, !status3);
-            //status3 = digitalRead(switch3);
-            status3 = !status3;
-          }
-          if (readString.indexOf("?b4") > 0) {
-            //digitalWrite(switch4, !status4);
-            //status4 = digitalRead(switch4);
-            status4 = !status4;
-          }
-
-          if (readString.indexOf("luci_anteriori") > 0) {
-            luci_ant = !luci_ant;
-          }
-          if (readString.indexOf("luci_posteriori") > 0) {
-            luci_post = !luci_post;
+          if (readString.indexOf("?logout") > 0) {
+            status5 = false;
           }
 
           // start html
@@ -134,52 +114,95 @@ void webServer() {
           client.println("<html>");
           client.println("<head>");
           client.println("<title>BTMS timing</title>");
-          client.println("<meta http-equiv=\"refresh\" content=\"2;url=/\">"); //auto refresh every 2 seconds
-          client.println("</head>");
-          client.println("<body>");
-          client.println("<h1>BTMS timing</h1>");
-          client.println("<hr style=\"color: blue;\">");
-          client.println("<b>Switch control</b>");
-          client.println("<table border=\"1px solid black;\" cellpadding=\"10px;\">");
-          client.println("<tr><th>Name</th><th>Switch</th><th>Status</th></tr>");
 
-          client.print("<tr><td>Switch1</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b1'\"></td><td");
-          if (status1) client.print (" bgcolor=\"lime\"");
-          client.print(">");
-          client.print(status1);
-          client.println("</td></tr>");
+          // when logged In
+          if (status5) {
+            //Read command and change port status
+            if (readString.indexOf("?b1") > 0) {
+              //digitalWrite(switch1, !status1);
+              //status1 = digitalRead(switch1);
+              status1 = !status1;
+            }
+            if (readString.indexOf("?b2" ) > 0) {
+              //digitalWrite(switch2, !status2);
+              //status2 = digitalRead(switch2);
+              status2 = !status2;
+            }
+            if (readString.indexOf("?b3") > 0) {
+              //digitalWrite(switch3, !status3);
+              //status3 = digitalRead(switch3);
+              status3 = !status3;
+            }
+            if (readString.indexOf("?b4") > 0) {
+              //digitalWrite(switch4, !status4);
+              //status4 = digitalRead(switch4);
+              status4 = !status4;
+            }
+            if (readString.indexOf("luci_anteriori") > 0) {
+              luci_ant = !luci_ant;
+            }
+            if (readString.indexOf("luci_posteriori") > 0) {
+              luci_post = !luci_post;
+            }
 
-          client.print("<tr><td>Switch2</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b2'\"></td><td");
-          if (status2) client.print (" bgcolor=\"lime\"");
-          client.print(">");
-          client.print(status2);
-          client.println("</td></tr>");
+            client.println("<meta http-equiv=\"refresh\" content=\"2;url=/\">"); //auto refresh every 2 seconds
+            client.println("</head>");
+            client.println("<body>");
+            client.println("<h1>BTMS timing</h1>");
+            client.println("<p><input type=\"button\" value=\"Log Out\" onclick = \"location.href='/?logout'\"></p>");
+            client.println("<hr style=\"color: blue;\">");
+            client.println("<p><b>CONTROL PANEL</b></p>");
+            client.println("<table border=\"1px solid black;\" cellpadding=\"10px;\">");
+            client.println("<tr><th>Name</th><th>Switch</th><th>Status</th></tr>");
 
-          client.print("<tr><td>Switch3</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b3'\"></td><td");
-          if (status3) client.print (" bgcolor=\"lime\"");
-          client.print(">");
-          client.print(status3);
-          client.println("</td></tr>");
+            client.print("<tr><td>Switch1</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b1'\"></td><td");
+            if (status1) client.print (" bgcolor=\"lime\"");
+            client.print(">");
+            client.print(status1);
+            client.println("</td></tr>");
 
-          client.print("<tr><td>Switch4</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b4'\"></td><td");
-          if (status4) client.print (" bgcolor=\"lime\"");
-          client.print(">");
-          client.print(status4);
-          client.println("</td></tr>");
+            client.print("<tr><td>Switch2</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b2'\"></td><td");
+            if (status2) client.print (" bgcolor=\"lime\"");
+            client.print(">");
+            client.print(status2);
+            client.println("</td></tr>");
 
-          client.println("</table>");
-          client.println("<br/>");
+            client.print("<tr><td>Switch3</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b3'\"></td><td");
+            if (status3) client.print (" bgcolor=\"lime\"");
+            client.print(">");
+            client.print(status3);
+            client.println("</td></tr>");
 
-          v1 = analogRead(0) * 5.0 / 1023.0;
-          v2 = analogRead(1) * 5.0 / 1023.0;
+            client.print("<tr><td>Switch4</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b4'\"></td><td");
+            if (status4) client.print (" bgcolor=\"lime\"");
+            client.print(">");
+            client.print(status4);
+            client.println("</td></tr>");
 
-          client.println("<b>Analog read</b><br/>");
-          client.print("V1 = ");
-          client.println(v1);
-          client.print("<br/>V2 = ");
-          client.println(v2);
+            client.println("</table>");
+            client.println("<br/>");
 
-          client.println("</body>");
+            v1 = analogRead(0) * 5.0 / 1023.0;
+            v2 = analogRead(1) * 5.0 / 1023.0;
+
+            client.println("<p><b>Analog read</b><br/></p>");
+            client.print("V1 = ");
+            client.println(v1);
+            client.print("<br/>V2 = ");
+            client.println(v2);
+
+            client.println("</body>");
+          }
+          else {
+            client.println("<h1>BTMS timing</h1>");
+            client.println("<form action=/>");
+            client.println("<p><input type=\"password\" id=\"pwd\" name=\"pwd\" maxlength=\"6\">");
+            client.println("<button type=”submit”>Log In</button></p>");
+            client.println("</form>");
+            client.println("<hr style=\"color: blue;\">");
+            client.println("</head>");
+          }
+
           client.println("</html>");
 
 
