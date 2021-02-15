@@ -1,2 +1,2 @@
-# btms-timing-mcu-board
-btms-timing-mcu-board
+# btms-mcu-board
+btms-mcu-board
