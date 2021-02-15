@@ -22,7 +22,7 @@
 #include "src\TeensyThreads\TeensyThreads.h"
 
 
-const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEA };
 EthernetServer server(80);
 
 // size of buffer to store HTTP requests
