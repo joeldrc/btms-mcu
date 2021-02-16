@@ -42,7 +42,7 @@ int char_cnt = 0;
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML>
 <html>
-<head><title>Digital Input Analyser</title>
+<head><title>BTMS MCU</title>
 <style>
 span{position:absolute; left:540px; top:50px;}
 </style>
@@ -51,11 +51,11 @@ span{position:absolute; left:540px; top:50px;}
 <canvas id="myCanvas" width=100% height="300"></canvas>
 <menu id="menu_items" >
 <div >
-<span id="lab0"><input type="checkbox" id="c0" checked><label for="c0" style="color:#ff0000">D5</label></span>
-<span id="lab1"><input type="checkbox" id="c1" checked ><label for="c1" style="color:#00ff00">D6</label></span>
-<span id="lab2"><input type="checkbox" id="c2" checked ><label for="c2" style="color:#0000ff">D7</label></span>
-<span id="lab3"><input type="checkbox" id="c3" checked ><label for="c3" style="color:#ff00ff">D8</label></span>
-<span style="left:610px;">Division:<select id="dur"><option value="1000">1sec</option><option value="500">500ms</option><option value="200">200ms</option><option value="100">100ms</option><option value="10">10ms</option><option value="1">1ms</option></select></span>
+<span id="lab0"><input type="checkbox" id="c0" checked><label for="c0" style="color:#000000">D5</label></span>
+<span id="lab1"><input type="checkbox" id="c1" checked ><label for="c1" style="color:#000000">D6</label></span>
+<span id="lab2"><input type="checkbox" id="c2" checked ><label for="c2" style="color:#000000">D7</label></span>
+<span id="lab3"><input type="checkbox" id="c3" checked ><label for="c3" style="color:#000000">D8</label></span>
+<span style="left:610px;">Division:<select id="dur"><option value="1000">1sec</option><option value="500">500ms</option><option value="200">200ms</option><option value="100">100ms</option><option value="10">10ms</option></select></span>
 </div>
 </menu>
 <span style="left:1150px; top:140px;">D8</span>
@@ -109,15 +109,15 @@ var aval0=[], aval1=[], aval2=[], aval3=[];
 
 
 var plotWidth = 1200;
-var plotHeight = plotWidth/2;
+var plotHeight = 300;
 
-var columnNumber = 38;
+var columnNumber = 100;
 var columnOffset = 100;
 
 var rowNumber = 9;
 var rowOffset = 125;
 
-var rectWidth = 30;
+var rectWidth = 10;
 var rectHeight = 25;
 
 var tracePosition = [ 150, 200, 250, 300 ];
@@ -159,10 +159,9 @@ function drawPlot(barSel){
   ctx.save();
   ctx.beginPath();
   ctx.lineWidth = 1;
-  ctx.strokeStyle = '#b0b0b0';
+  ctx.strokeStyle = '#efefef';
   
   for(cnt=1; cnt < rowNumber; cnt++){
-    ctx.setLineDash([1,1]);
     ctx.moveTo(0, columnOffset+cnt*rectHeight);
     ctx.lineTo(plotWidth - rectWidth, columnOffset+cnt*rectHeight);
     ctx.stroke();
