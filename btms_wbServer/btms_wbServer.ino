@@ -47,63 +47,108 @@ const char index_html[] PROGMEM = R"rawliteral(
 span{position:absolute; left:540px; top:50px;}
 </style>
 </head>
-<body id="test" onload="drawGraph();">
-<canvas id="myCanvas" width="570" height="300"></canvas>
+<body id="test" onload="resizeCanvas();">
+<canvas id="myCanvas" width=100% height="300"></canvas>
 <menu id="menu_items" >
 <div >
-<span style="left:60px;"><input type="checkbox" id="c0" checked><label for="c0" style="color:#ff0000">D5</label></span>
-<span style="left:110px;"><input type="checkbox" id="c1" checked ><label for="c1" style="color:#00ff00">D6</label></span>
-<span style="left:160px;"><input type="checkbox" id="c2" checked ><label for="c2" style="color:#0000ff">D7</label></span>
-<span style="left:210px;"><input type="checkbox" id="c3" checked ><label for="c3" style="color:#ff00ff">D8</label></span>
-<span style="left:410px;">Division:<select id="dur"><option value="100">100ms</option><option value="200">200ms</option><option value="500">500ms</option><option value="1000">1sec</option></select></span>
+<span id="lab0"><input type="checkbox" id="c0" checked><label for="c0" style="color:#ff0000">D5</label></span>
+<span id="lab1"><input type="checkbox" id="c1" checked ><label for="c1" style="color:#00ff00">D6</label></span>
+<span id="lab2"><input type="checkbox" id="c2" checked ><label for="c2" style="color:#0000ff">D7</label></span>
+<span id="lab3"><input type="checkbox" id="c3" checked ><label for="c3" style="color:#ff00ff">D8</label></span>
+<span style="left:610px;">Division:<select id="dur"><option value="1000">1sec</option><option value="500">500ms</option><option value="200">200ms</option><option value="100">100ms</option><option value="10">10ms</option><option value="1">1ms</option></select></span>
 </div>
 </menu>
-<span style="top:140px;">D8</span>
-<span style="top:190px;">D7</span>
-<span style="top:240px;">D6</span>
-<span style="top:290px;">D5</span>
+<span style="left:1150px; top:140px;">D8</span>
+<span style="left:1150px; top:190px;">D7</span>
+<span style="left:1150px; top:240px;">D6</span>
+<span style="left:1150px; top:290px;">D5</span>
 <script type="text/javascript">
-function GetArduinoInputs(){
+
+function resizeCanvas() {
+    var canvs = document.getElementById("myCanvas");
+    canvs.width = window.innerWidth/2;
+    canvs.height = window.innerHeight/2;
+  
+  var lab0 = document.getElementById("lab0");
+  lab0.style = "left:60px;";
+  var lab1 = document.getElementById("lab1");
+  lab1.style = "left:110px;";
+  var lab2 = document.getElementById("lab2");
+  lab2.style = "left:160px;";
+  var lab3 = document.getElementById("lab3");
+  lab3.style = "left:210px;";
+  
+  drawGraph();
+}
+
+function GetMcuInputs(){
+  /*
+  updateGraph(Math.round(Math.random()),Math.round(Math.random()),Math.round(Math.random()),Math.round(Math.random()));
+  setTimeout('GetMcuInputs()',document.getElementById('dur').value);
+  */
+  
   var request = new XMLHttpRequest();
   request.onreadystatechange = function(){
-  if(this.readyState == 4 && this.status == 200 && this.responseXML!=null){
-    updateGraph(this.responseXML.getElementsByTagName('digital')[0].childNodes[0].nodeValue,
-    this.responseXML.getElementsByTagName('digital')[1].childNodes[0].nodeValue,
-    this.responseXML.getElementsByTagName('digital')[2].childNodes[0].nodeValue,
-    this.responseXML.getElementsByTagName('digital')[3].childNodes[0].nodeValue);
+    if(this.readyState == 4 && this.status == 200 && this.responseXML!=null){
+      updateGraph(this.responseXML.getElementsByTagName('digital')[0].childNodes[0].nodeValue,
+      this.responseXML.getElementsByTagName('digital')[1].childNodes[0].nodeValue,
+      this.responseXML.getElementsByTagName('digital')[2].childNodes[0].nodeValue,
+      this.responseXML.getElementsByTagName('digital')[3].childNodes[0].nodeValue);
     }
   }
   request.open("GET", "ajax_inputs&random="+Math.random()*1000000,true);
   request.send(null)
-  setTimeout('GetArduinoInputs()',document.getElementById('dur').value);
+  setTimeout('GetMcuInputs()',document.getElementById('dur').value); 
 }
 
+var textColor = "#037ffc"
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
-myCanvas.style.border = "red 1px solid";
+myCanvas.style.border = "black 1px solid";
 var aval0=[], aval1=[], aval2=[], aval3=[]; 
 
-for(cnt=0; cnt<18; cnt++){
+
+var plotWidth = 1200;
+var plotHeight = plotWidth/2;
+
+var columnNumber = 38;
+var columnOffset = 100;
+
+var rowNumber = 9;
+var rowOffset = 125;
+
+var rectWidth = 30;
+var rectHeight = 25;
+
+var tracePosition = [ 150, 200, 250, 300 ];
+
+
+for(cnt=0; cnt < columnNumber; cnt++){
   aval0[cnt]=0;
   aval1[cnt]=0;
   aval2[cnt]=0;
   aval3[cnt]=0;
 }
 
-function drawGraph(){initGraph(); updateGraph(0,0,0,0); GetArduinoInputs();}
+function drawGraph(){
+  initGraph(); 
+  updateGraph(0,0,0,0); 
+  GetMcuInputs();
+}
 
 function initGraph(){
-  ctx.fillStyle="#ff0000";
-  ctx.font = "28px serif";
+  ctx.fillStyle= textColor;
+  ctx.font = "28px arial";
   ctx.textAlign = "center";
-  ctx.fillText("DIGITAL INPUT ANALYSER",290,30);
+  ctx.fillText("BTMS INPUT ANALYSER",canvas.width/2 ,30);
 }
+
 function updateGraph(val0, val1, val2, val3){
-  ctx.clearRect(0, 30, canvas.width, canvas.height);
-  aval0.shift(); if(val0==1)aval0.push(25); else aval0.push(0);
-  aval1.shift(); if(val1==1)aval1.push(25); else aval1.push(0);
-  aval2.shift(); if(val2==1)aval2.push(25); else aval2.push(0);
-  aval3.shift(); if(val3==1)aval3.push(25); else aval3.push(0);
+  ctx.clearRect(0, rectWidth, canvas.width, canvas.height);
+  aval0.shift(); if(val0==1)aval0.push(rectHeight); else aval0.push(0);
+  aval1.shift(); if(val1==1)aval1.push(rectHeight); else aval1.push(0);
+  aval2.shift(); if(val2==1)aval2.push(rectHeight); else aval2.push(0);
+  aval3.shift(); if(val3==1)aval3.push(rectHeight); else aval3.push(0);
   if(document.getElementById('c0').checked)drawPlot(0);
   if(document.getElementById('c1').checked)drawPlot(1);
   if(document.getElementById('c2').checked)drawPlot(2);
@@ -114,51 +159,56 @@ function drawPlot(barSel){
   ctx.save();
   ctx.beginPath();
   ctx.lineWidth = 1;
-  ctx.strokeStyle = '#888888';
-  for(cnt=1; cnt<9; cnt++){
+  ctx.strokeStyle = '#b0b0b0';
+  
+  for(cnt=1; cnt < rowNumber; cnt++){
     ctx.setLineDash([1,1]);
-    ctx.moveTo(0,75+cnt*25);
-    ctx.lineTo(525,75+cnt*25);
+    ctx.moveTo(0, columnOffset+cnt*rectHeight);
+    ctx.lineTo(plotWidth - rectWidth, columnOffset+cnt*rectHeight);
     ctx.stroke();
   }
-  for(cnt=1; cnt<18; cnt++){
-    ctx.moveTo(0+cnt*30,90);
-    ctx.lineTo(0+cnt*30,300);
+  for(cnt=1; cnt < columnNumber; cnt++){
+    ctx.moveTo(0+cnt*rectWidth, rowOffset);
+    ctx.lineTo(0+cnt*rectWidth, plotHeight);
     ctx.stroke();
   }
   ctx.restore();
   ctx.beginPath();
   switch(barSel){
-    case 0 : ctx.moveTo(0,300-aval0[0]); break;
-    case 1 : ctx.moveTo(0,250-aval1[0]); break;
-    case 2 : ctx.moveTo(0,200-aval2[0]); break;
-    default : ctx.moveTo(0, 150-aval3[0]); 
+    case 0 : ctx.moveTo(0, tracePosition[3] - aval0[0]); break;
+    case 1 : ctx.moveTo(0, tracePosition[2] - aval1[0]); break;
+    case 2 : ctx.moveTo(0, tracePosition[1] - aval2[0]); break;
+    default : ctx.moveTo(0, tracePosition[0] - aval3[0]); 
   }
-  for(cnt=1; cnt<18; cnt++){
+  for(cnt=1; cnt < columnNumber; cnt++){
     switch(barSel){
       case 0 : 
-        if(aval0[cnt]==aval0[cnt-1]) ctx.lineTo(cnt*30,300-aval0[cnt]);
-        if(aval0[cnt]>aval0[cnt-1]) { ctx.lineTo(cnt*30,300); ctx.lineTo(cnt*30,275);}
-        if(aval0[cnt]<aval0[cnt-1]) { ctx.lineTo(cnt*30,275); ctx.lineTo(cnt*30,300);}
-        ctx.strokeStyle = '#ff0000'; break;
+        if(aval0[cnt]==aval0[cnt-1]) ctx.lineTo(cnt*rectWidth, tracePosition[3] - aval0[cnt]);
+        if(aval0[cnt]>aval0[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[3]); ctx.lineTo(cnt*rectWidth, tracePosition[3] - rectHeight);}
+        if(aval0[cnt]<aval0[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[3] - rectHeight); ctx.lineTo(cnt*rectWidth, tracePosition[3]);}
+        ctx.strokeStyle = '#b103fc'; 
+        break;
       case 1 : 
-        if(aval1[cnt]==aval1[cnt-1]) ctx.lineTo(cnt*30,250-aval1[cnt]);
-        if(aval1[cnt]>aval1[cnt-1]) { ctx.lineTo(cnt*30,250); ctx.lineTo(cnt*30,225);}
-        if(aval1[cnt]<aval1[cnt-1]) { ctx.lineTo(cnt*30,225); ctx.lineTo(cnt*30,250);}
-        ctx.strokeStyle = '#00ff00'; break;
+        if(aval1[cnt]==aval1[cnt-1]) ctx.lineTo(cnt*rectWidth, tracePosition[2] - aval1[cnt]);
+        if(aval1[cnt]>aval1[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[2]); ctx.lineTo(cnt*rectWidth,tracePosition[2] - rectHeight);}
+        if(aval1[cnt]<aval1[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[2] - rectHeight); ctx.lineTo(cnt*rectWidth, tracePosition[2]);}
+        ctx.strokeStyle = '#036ffc'; 
+        break;
       case 2 : 
-        if(aval2[cnt]==aval2[cnt-1]) ctx.lineTo(cnt*30,200-aval2[cnt]);
-        if(aval2[cnt]>aval2[cnt-1]) { ctx.lineTo(cnt*30,200); ctx.lineTo(cnt*30,175);}
-        if(aval2[cnt]<aval2[cnt-1]) { ctx.lineTo(cnt*30,175); ctx.lineTo(cnt*30,200);}
-        ctx.strokeStyle = '#0000ff'; break;
+        if(aval2[cnt]==aval2[cnt-1]) ctx.lineTo(cnt*rectWidth, tracePosition[1] -aval2[cnt]);
+        if(aval2[cnt]>aval2[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[1]); ctx.lineTo(cnt*rectWidth,tracePosition[1] - rectHeight);}
+        if(aval2[cnt]<aval2[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[1] - rectHeight); ctx.lineTo(cnt*rectWidth, tracePosition[1]);}
+        ctx.strokeStyle = '#03fc84'; 
+        break;
       default : 
-        if(aval3[cnt]==aval3[cnt-1]) ctx.lineTo(cnt*30,150-aval3[cnt]);
-        if(aval3[cnt]>aval3[cnt-1]) { ctx.lineTo(cnt*30,150); ctx.lineTo(cnt*30,125);}
-        if(aval3[cnt]<aval3[cnt-1]) { ctx.lineTo(cnt*30,125); ctx.lineTo(cnt*30,150);}
-        ctx.strokeStyle = '#ff00ff'; break;
+        if(aval3[cnt]==aval3[cnt-1]) ctx.lineTo(cnt*rectWidth, tracePosition[0] -aval3[cnt]);
+        if(aval3[cnt]>aval3[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[0]); ctx.lineTo(cnt*rectWidth,tracePosition[0] - rectHeight);}
+        if(aval3[cnt]<aval3[cnt-1]) { ctx.lineTo(cnt*rectWidth, tracePosition[0] - rectHeight); ctx.lineTo(cnt*rectWidth,tracePosition[0]);}
+        ctx.strokeStyle = '#fc4e03'; 
+        break;
     }
-    ctx.lineWidth = 3;
-    ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.stroke();
   }
 }
 </script>
@@ -345,4 +395,6 @@ void loop(){
         delay(1);      // short delay before closing the connection
         CanvasDisplay.stop(); // close the connection
     } // end if (CanvasDisplay)
+    
+    threads.delay(50);
 }
