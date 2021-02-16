@@ -67,15 +67,15 @@ var aval0=[], aval1=[], aval2=[], aval3=[];
 
 
 var plotWidth = 1200;
-var plotHeight = plotWidth/2;
+var plotHeight = 300;
 
-var columnNumber = 38;
+var columnNumber = 100;
 var columnOffset = 100;
 
 var rowNumber = 9;
 var rowOffset = 125;
 
-var rectWidth = 30;
+var rectWidth = 10;
 var rectHeight = 25;
 
 var tracePosition = [ 150, 200, 250, 300 ];
@@ -117,10 +117,10 @@ function drawPlot(barSel){
 	ctx.save();
 	ctx.beginPath();
 	ctx.lineWidth = 1;
-	ctx.strokeStyle = '#b0b0b0';
+	ctx.strokeStyle = '#efefef';
 	
 	for(cnt=1; cnt < rowNumber; cnt++){
-		ctx.setLineDash([1,1]);
+		//ctx.setLineDash([1,1]);
 		ctx.moveTo(0, columnOffset+cnt*rectHeight);
 		ctx.lineTo(plotWidth - rectWidth, columnOffset+cnt*rectHeight);
 		ctx.stroke();
@@ -129,7 +129,8 @@ function drawPlot(barSel){
 		ctx.moveTo(0+cnt*rectWidth, rowOffset);
 		ctx.lineTo(0+cnt*rectWidth, plotHeight);
 		ctx.stroke();
-	}
+	}	
+
 	ctx.restore();
 	ctx.beginPath();
 	switch(barSel){
