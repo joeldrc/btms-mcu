@@ -22,7 +22,7 @@
 #include "src\TeensyThreads\TeensyThreads.h"
 
 
-const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEA };
+const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 EthernetServer server(80);
 
 // size of buffer to store HTTP requests
@@ -189,8 +189,7 @@ void statusLed_thread() {
     threads.delay(100);
     digitalWrite(ledPin, LOW);
     threads.delay(100);
-
-    threads.yield();
+    //threads.yield();
   }
 }
 
