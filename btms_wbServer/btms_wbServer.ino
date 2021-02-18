@@ -354,10 +354,10 @@ void loop(){
         while (CanvasDisplay.connected()) {
             if (CanvasDisplay.available()) {   // check if CanvasDisplay available to read
                 char HTTP_requst_char = CanvasDisplay.read(); // read 1 byte (character) from CanvasDisplay request
-                    if (char_cnt < (REQUEST_BUFFER - 1)) { //last element is 0 => null terminate string
-                    HTTP_requst[char_cnt] = HTTP_requst_char;          // store each HTTP request character in HTTP_requst array
-                    char_cnt++;
-                }
+				if (char_cnt < (REQUEST_BUFFER - 1)) { //last element is 0 => null terminate string
+					HTTP_requst[char_cnt] = HTTP_requst_char;          // store each HTTP request character in HTTP_requst array
+					char_cnt++;
+				}
                 if (HTTP_requst_char == '\n' && currentLineIsBlank) { //give response only after last line
                     // send a standard http response header
                     CanvasDisplay.println("HTTP/1.1 200 OK");
