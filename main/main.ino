@@ -110,29 +110,7 @@ void asciiConversion(bool* val, const uint32_t numVal) {
 }
 
 
-void htmlPage(EthernetClient client, String httpRequest) {
-  //Read command and change port status
-  if (httpRequest.indexOf("?b1") > 0) {
-    //digitalWrite(switch1, !status1);
-    //status1 = digitalRead(switch1);
-    status1 = !status1;
-  }
-  if (httpRequest.indexOf("?b2" ) > 0) {
-    //digitalWrite(switch2, !status2);
-    //status2 = digitalRead(switch2);
-    status2 = !status2;
-  }
-  if (httpRequest.indexOf("?b3") > 0) {
-    //digitalWrite(switch3, !status3);
-    //status3 = digitalRead(switch3);
-    status3 = !status3;
-  }
-  if (httpRequest.indexOf("?b4") > 0) {
-    //digitalWrite(switch4, !status4);
-    //status4 = digitalRead(switch4);
-    status4 = !status4;
-  }
-
+void htmlPage(auto client) {
   client.println("<html>");
   client.println("<head>");
   client.println("<title>BTMS timing</title>");
@@ -218,7 +196,6 @@ void htmlPage(EthernetClient client, String httpRequest) {
   }
   client.println("</tr></table></body>");
   client.println("</html>");
-  httpRequest = "";
 }
 
 
@@ -232,7 +209,8 @@ void webServer_thread() {
     while (client.connected()) {
       if (client.available()) {
         char c = client.read();
-        Serial.write(c);
+        //Serial.write(c);
+
         // if you've gotten to the end of the line (received a newline
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
@@ -244,7 +222,7 @@ void webServer_thread() {
           client.println("Refresh: 1");  // refresh the page automatically every 5 sec
           client.println();
 
-          htmlPage(client, c);
+          htmlPage(client);
 
           break;
         }
@@ -258,7 +236,7 @@ void webServer_thread() {
       }
     }
     // give the web browser time to receive the data
-    delay(1);
+    delay(10);
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
@@ -278,7 +256,8 @@ void setup() {
   Serial.begin(9600);
   Serial.println("BTMS mcu serial monitor");
 
-  threads.addThread(ethernetConfig_thread, 1);
+  ethernetConfig_thread();
+  //threads.addThread(ethernetConfig_thread, 1);
   //threads.addThread(ctrlLedThread, 1);
 }
 
