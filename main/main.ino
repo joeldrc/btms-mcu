@@ -110,7 +110,7 @@ void asciiConversion(bool* val, const uint32_t numVal) {
 }
 
 
-void html(EthernetClient client, String httpRequest) {
+void htmlPage(EthernetClient client, String httpRequest) {
   //Read command and change port status
   if (httpRequest.indexOf("?b1") > 0) {
     //digitalWrite(switch1, !status1);
@@ -136,9 +136,7 @@ void html(EthernetClient client, String httpRequest) {
   client.println("<html>");
   client.println("<head>");
   client.println("<title>BTMS timing</title>");
-
-  client.println("<meta http-equiv=\"refresh\" content=\"1;url=/\" charset=\"utf-8\">"); //auto refresh every 2 seconds
-  //client.print("<style> table, th, td { border: 1px solid black; border-collapse: collapse; } </style>");
+  client.println("<meta charset=\"utf-8\">");
   client.println("</head>");
   client.println("<body>");
   client.println("<h1>BTMS timing</h1>");
@@ -187,7 +185,6 @@ void html(EthernetClient client, String httpRequest) {
   client.println("<br><br>");
   client.println("<table><tr><th>Name</th><th> </th></tr>");
 
-
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
     for (uint32_t i = 0; i < samplesNumber; i++) {
       static int cnt = 0;
@@ -221,36 +218,11 @@ void html(EthernetClient client, String httpRequest) {
   }
   client.println("</tr></table></body>");
   client.println("</html>");
-
   httpRequest = "";
 }
 
 
 void webServer_thread() {
-
-}
-
-
-void setup() {
-  // set the digital pin as output:
-  pinMode(ledPin, OUTPUT);
-
-  pinMode(0, INPUT);
-  pinMode(1, INPUT);
-  pinMode(2, INPUT);
-  pinMode(3, INPUT);
-
-  Serial.begin(9600);
-  Serial.println("BTMS mcu serial monitor");
-
-  threads.addThread(ethernetConfig_thread, 1);
-  threads.addThread(ctrlLedThread, 1);
-}
-
-
-void loop() {
-  //webServer_thread();
-
   // listen for incoming clients
   EthernetClient client = server.available();
   if (client) {
@@ -269,20 +241,11 @@ void loop() {
           client.println("HTTP/1.1 200 OK");
           client.println("Content-Type: text/html");
           client.println("Connection: close");  // the connection will be closed after completion of the response
-          client.println("Refresh: 5");  // refresh the page automatically every 5 sec
+          client.println("Refresh: 1");  // refresh the page automatically every 5 sec
           client.println();
-          client.println("<!DOCTYPE HTML>");
-          client.println("<html>");
-          // output the value of each analog input pin
-          for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
-            int sensorReading = analogRead(analogChannel);
-            client.print("analog input ");
-            client.print(analogChannel);
-            client.print(" is ");
-            client.print(sensorReading);
-            client.println("<br />");
-          }
-          client.println("</html>");
+
+          htmlPage(client, c);
+
           break;
         }
         if (c == '\n') {
@@ -300,6 +263,26 @@ void loop() {
     client.stop();
     Serial.println("client disconnected");
   }
+}
 
-  threads.yield();
+
+void setup() {
+  // set the digital pin as output:
+  pinMode(ledPin, OUTPUT);
+
+  pinMode(0, INPUT);
+  pinMode(1, INPUT);
+  pinMode(2, INPUT);
+  pinMode(3, INPUT);
+
+  Serial.begin(9600);
+  Serial.println("BTMS mcu serial monitor");
+
+  threads.addThread(ethernetConfig_thread, 1);
+  //threads.addThread(ctrlLedThread, 1);
+}
+
+
+void loop() {
+  webServer_thread();
 }
