@@ -17,11 +17,15 @@
 */
 
 
-//#include <SPI.h>
+#include <SPI.h>
+#include <fnet.h>
+
+//#include "src\Fnet\fnet.h"
 #include "src\NativeEthernet\NativeEthernet.h"
 #include "src\TeensyThreads\TeensyThreads.h"
+
 #include "defines.h"
-#include "wb_page.h"
+#include "webPage.h"
 
 
 const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
@@ -53,7 +57,7 @@ String row[samplesNumber];
 
 
 void ethernetConfig_thread() {
-  if (Ethernet.begin(mac) == 0) {
+  if (Ethernet.begin(mac, 60000, 4000) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
   }
 
@@ -223,7 +227,7 @@ void webServer_thread() {
           client.println();
 
           htmlPage(client);
-
+          client.close();
           break;
         }
         if (c == '\n') {
@@ -258,7 +262,7 @@ void setup() {
 
   ethernetConfig_thread();
   //threads.addThread(ethernetConfig_thread, 1);
-  //threads.addThread(ctrlLedThread, 1);
+  threads.addThread(ctrlLedThread, 1);
 }
 
 
