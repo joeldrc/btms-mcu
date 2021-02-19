@@ -93,7 +93,7 @@ void ctrlLedThread() {
     static bool ledVal = false;
     digitalWrite(StsLed1, ledVal);
     ledVal = !ledVal;
-    threads.delay(200);
+    threads.delay(100);
     threads.yield();
   }
 }
@@ -133,19 +133,51 @@ void asciiConversion(bool* val, const uint32_t numVal) {
 
 
 void htmlPage(auto client) {
-  client.println("<html>");
-  client.println("<head>");
-  client.println("<title>BTMS timing</title>");
-  client.println("<meta charset=\"utf-8\">");
-  client.println("</head>");
-  client.println("<body>");
-  client.println("<h1>BTMS timing</h1>");
-  client.println("<p><input type=\"button\" value=\"Log Out\" onclick = \"location.href='/?logout'\"></p>");
-  client.println("<hr style=\"color: blue;\">");
-  client.println("<p><b>CONTROL PANEL</b></p>");
+
+
+  String htmlPage2 = "";
+  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
+    for (uint32_t i = 0; i < samplesNumber; i++) {
+      static int cnt = 0;
+      static int x = 0;
+      static bool val;
+
+      if (cnt == x) {
+        val = random(2);  //random numbers from 0 to 1
+        x = random(10);
+        cnt = 0;
+      }
+      else {
+        cnt++;
+      }
+      values[cnt][i] = val;
+    }
+    htmlPage2 += "<tr><td style=\"color: blue;\">P1</td><td style=\"color: green;\"><pre>";
+    asciiConversion(values[cnt], samplesNumber);
+    for (uint32_t i = 0; i < samplesNumber; i++) {
+      htmlPage2 += row[i];
+    }
+    htmlPage2 += "\n";
+
+    for (uint32_t i = 0; i < samplesNumber; i++) {
+      htmlPage2 += values[cnt][i];
+    }
+    htmlPage2 += "\n";
+    htmlPage2 += "</pre></td>";
+  }
+
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println("Connection: close");  // the connection will be closed after completion of the response
+  client.println("Refresh: 1");  // refresh the page automatically every 5 sec
+  client.println();
+
+  String htmlPage = html_1;
+
+  client.println(htmlPage);
+
   client.println("<table>");
   client.println("<tr><th>Name</th><th>Switch</th><th>Status</th></tr>");
-
   client.print("<tr><td>Switch1</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b1'\"></td><td");
   if (status1) client.print (" bgcolor=\"lime\"");
   client.print(">");
@@ -184,40 +216,11 @@ void htmlPage(auto client) {
 
   client.println("<br><br>");
   client.println("<table><tr><th>Name</th><th> </th></tr>");
-
-  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      static int cnt = 0;
-      static int x = 0;
-      static bool val;
-
-      if (cnt == x) {
-        val = random(2);  //random numbers from 0 to 1
-        x = random(10);
-        cnt = 0;
-      }
-      else {
-        cnt++;
-      }
-      values[cnt][i] = val;
-    }
-
-    client.println("<tr><td style=\"color: blue;\">P1</td><td style=\"color: green;\"><pre>");
-    asciiConversion(values[cnt], samplesNumber);
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      client.print(row[i]);
-    }
-    client.println("");
-
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      client.print(values[cnt][i]);
-    }
-    client.println("");
-
-    client.println("</pre></td>");
-  }
+  client.println(htmlPage2);
   client.println("</tr></table></body>");
   client.println("</html>");
+
+  client.close();
 }
 
 
@@ -237,15 +240,9 @@ void webServer_thread() {
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
         if (c == '\n' && currentLineIsBlank) {
-          // send a standard http response header
-          client.println("HTTP/1.1 200 OK");
-          client.println("Content-Type: text/html");
-          client.println("Connection: close");  // the connection will be closed after completion of the response
-          client.println("Refresh: 1");  // refresh the page automatically every 5 sec
-          client.println();
 
           htmlPage(client);
-          client.close();
+
           break;
         }
         if (c == '\n') {
@@ -258,7 +255,7 @@ void webServer_thread() {
       }
     }
     // give the web browser time to receive the data
-    delay(10);
+    delay(1);
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
@@ -318,10 +315,9 @@ void setup() {
   Serial.begin(9600);
   Serial.println("BTMS mcu serial monitor");
 
-  ethernetConfig_thread();
-  //threads.addThread(ethernetConfig_thread, 1);
   threads.addThread(ctrlLedThread, 1);
   threads.addThread(ctrlConnection, 1);
+  threads.addThread(ethernetConfig_thread, 1);
 }
 
 
