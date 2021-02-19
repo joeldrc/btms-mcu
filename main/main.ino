@@ -16,16 +16,14 @@
  ******************************************************************************
 */
 
+#include "defines.h"
+#include "webPage.h"
 
 #include <SPI.h>
 #include <fnet.h>
-
-//#include "src\Fnet\fnet.h"
+//#include "src\fnet.h"
 #include "src\NativeEthernet\NativeEthernet.h"
 #include "src\TeensyThreads\TeensyThreads.h"
-
-#include "defines.h"
-#include "webPage.h"
 
 
 const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
@@ -92,11 +90,31 @@ void ethernetConfig_thread() {
 
 void ctrlLedThread() {
   while (1) {
-    digitalWrite(ledPin, HIGH);
-    threads.delay(100);
-    digitalWrite(ledPin, LOW);
-    threads.delay(100);
+    static bool ledVal = false;
+    digitalWrite(StsLed1, ledVal);
+    ledVal = !ledVal;
+    threads.delay(200);
+    threads.yield();
+  }
+}
 
+
+void ctrlConnection() {
+  while (1) {
+    auto link = Ethernet.linkStatus();
+    Serial.print("Link status: ");
+    switch (link) {
+      case LinkON:
+        Serial.println("Ethernet cable is connected.");
+        break;
+      case Unknown:
+        Serial.println("Unknown status.");
+        break;
+      case LinkOFF:
+        Serial.println("Ethernet cable is not connected.");
+        break;
+    }
+    threads.delay(1000);
     threads.yield();
   }
 }
@@ -249,13 +267,53 @@ void webServer_thread() {
 
 
 void setup() {
-  // set the digital pin as output:
-  pinMode(ledPin, OUTPUT);
+  // set the digital pin as input
+  pinMode(IECY, INPUT);
+  pinMode(ICalStp, INPUT);
+  pinMode(ICalStrt, INPUT);
+  pinMode(ISCY, INPUT);
+  pinMode(Lock, INPUT);
 
-  pinMode(0, INPUT);
-  pinMode(1, INPUT);
-  pinMode(2, INPUT);
-  pinMode(3, INPUT);
+  pinMode(ADC10, INPUT);
+  pinMode(ADC11, INPUT);
+  pinMode(ADC12, INPUT);
+  pinMode(ADC13, INPUT);
+
+  pinMode(_10MHzDet, INPUT);
+  pinMode(D10MHz, INPUT);
+  pinMode(IHCH, INPUT);
+
+  pinMode(SW6, INPUT_PULLUP);
+  pinMode(SW5, INPUT_PULLUP);
+  pinMode(SW4, INPUT_PULLUP);
+  pinMode(SW3, INPUT_PULLUP);
+  pinMode(SW2, INPUT_PULLUP);
+  pinMode(SW1, INPUT_PULLUP);
+  pinMode(SECY, OUTPUT);
+  pinMode(SSCY, OUTPUT);
+  pinMode(SHCH, OUTPUT);
+  pinMode(BFrev4, OUTPUT);
+  pinMode(TEN, OUTPUT);
+  pinMode(FastGPIO1, OUTPUT);
+  pinMode(SINJ, OUTPUT);
+  pinMode(BFrev3, OUTPUT);
+  pinMode(StsLed1, OUTPUT);
+  pinMode(FastGPIO3, OUTPUT);
+  pinMode(FastGPIO2, OUTPUT);
+  pinMode(StsLedOr, OUTPUT);
+  pinMode(StsLedGr, OUTPUT);
+  pinMode(SCalStp, OUTPUT);
+  pinMode(BFrev2, OUTPUT);
+  pinMode(SCalStrt, OUTPUT);
+  pinMode(BFrev1, OUTPUT);
+  pinMode(StsLed8, OUTPUT);
+  pinMode(StsLed7, OUTPUT);
+  pinMode(StsLed6, OUTPUT);
+  pinMode(StsLed5, OUTPUT);
+  pinMode(StsLed4, OUTPUT);
+  pinMode(StsLed3, OUTPUT);
+  pinMode(StsLed2, OUTPUT);
+
 
   Serial.begin(9600);
   Serial.println("BTMS mcu serial monitor");
@@ -263,6 +321,7 @@ void setup() {
   ethernetConfig_thread();
   //threads.addThread(ethernetConfig_thread, 1);
   threads.addThread(ctrlLedThread, 1);
+  threads.addThread(ctrlConnection, 1);
 }
 
 
