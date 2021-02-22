@@ -30,14 +30,12 @@ const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 EthernetServer server(80);
 
 // size of buffer to store HTTP requests
-#define REQUEST_BUFFER   50
+const uint8_t REQUEST_BUFFER = 100;
+uint16_t charCnt = 0;
+char httpRequest[REQUEST_BUFFER] = {0};   // HTTP request string
+
 
 // Global variables
-char HTTP_requst[50] = {0}; // HTTP request string
-int char_cnt = 0;
-String password = "123456";
-uint8_t ledState = false;               // ledState used to set the LED
-
 bool status1 = false;
 bool status2 = false;
 bool status3 = false;
@@ -46,6 +44,8 @@ bool status5 = false;
 
 float v1 = 0;
 float v2 = 0;
+float v3 = 0;
+float v4 = 0;
 
 const uint32_t samplesNumber = 150; // 2400m
 const uint8_t numTraces = 10;
@@ -59,19 +59,7 @@ void ethernetConfig_thread() {
     Serial.println("Failed to configure Ethernet using DHCP");
   }
 
-  auto link = Ethernet.linkStatus();
-  Serial.print("Link status: ");
-  switch (link) {
-    case LinkON:
-      Serial.println("Ethernet cable is connected.");
-      break;
-    case Unknown:
-      Serial.println("Unknown status.");
-      break;
-    case LinkOFF:
-      Serial.println("Ethernet cable is not connected.");
-      break;
-  }
+  ctrlConnection();
 
   // start the server
   server.begin();
@@ -132,8 +120,43 @@ void asciiConversion(bool* val, const uint32_t numVal) {
 }
 
 
+// searches for a needle in the haystack
+char SearchForRequest(char *haystack, char *needle) {
+  char needle_index = 0;
+  char haystack_index = 0;
+  char haystack_length;
+
+  haystack_length = strlen(haystack);
+  if (strlen(needle) > haystack_length) return 0;
+  while (haystack_index < haystack_length) {
+    if (haystack[haystack_index] == needle[needle_index]) {
+      needle_index++;
+      if (needle_index == strlen(needle)) return 1; // found needle
+    }
+    else needle_index = 0;
+    haystack_index++;
+  }
+  return 0;
+}
+
+
 void htmlPage(auto client) {
 
+  // Check http requests
+  //if (httpRequest.indexOf("?b1") > 0)
+
+  if (SearchForRequest(httpRequest, "?b1")) {
+    status1 = !status1;
+  }
+  else if (SearchForRequest(httpRequest, "?b2")) {
+    status2 = !status2;
+  }
+  else if (SearchForRequest(httpRequest, "?b3")) {
+    status3 = !status3;
+  }
+  else if (SearchForRequest(httpRequest, "?b4")) {
+    status4 = !status4;
+  }
 
   String htmlPage2 = "";
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
@@ -166,14 +189,17 @@ void htmlPage(auto client) {
     htmlPage2 += "</pre></td>";
   }
 
+  v1 = analogRead(0) * 5.0 / 1023.0;
+  v2 = analogRead(1) * 5.0 / 1023.0;
+
+  // start html
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
   client.println("Connection: close");  // the connection will be closed after completion of the response
-  client.println("Refresh: 1");  // refresh the page automatically every 5 sec
+  //client.println("Refresh: 1");       // refresh the page automatically
   client.println();
 
   String htmlPage = html_1;
-
   client.println(htmlPage);
 
   client.println("<table>");
@@ -205,9 +231,6 @@ void htmlPage(auto client) {
   client.println("</table>");
   client.println("<br/>");
 
-  v1 = analogRead(0) * 5.0 / 1023.0;
-  v2 = analogRead(1) * 5.0 / 1023.0;
-
   client.println("<p><b>Analog read</b><br/></p>");
   client.print("V1 = ");
   client.println(v1);
@@ -220,6 +243,7 @@ void htmlPage(auto client) {
   client.println("</tr></table></body>");
   client.println("</html>");
 
+  // close client connection
   client.close();
 }
 
@@ -228,13 +252,24 @@ void webServer_thread() {
   // listen for incoming clients
   EthernetClient client = server.available();
   if (client) {
-    Serial.println("new client");
+    Serial.println("New client.");
+
     // an http request ends with a blank line
     boolean currentLineIsBlank = true;
     while (client.connected()) {
       if (client.available()) {
         char c = client.read();
-        //Serial.write(c);
+        /*
+          Serial.write(c);
+          if (httpRequest.length() < REQUEST_BUFFER) {
+          httpRequest += c;
+          }
+        */
+
+        if (charCnt < (REQUEST_BUFFER - 1)) { //last element is 0 => null terminate string
+          httpRequest[charCnt] = c;           // store each HTTP request character in HTTP_requst array
+          charCnt++;
+        }
 
         // if you've gotten to the end of the line (received a newline
         // character) and the line is blank, the http request has ended,
@@ -243,6 +278,11 @@ void webServer_thread() {
 
           htmlPage(client);
 
+          // reset buffer
+          charCnt = 0;
+          for (int i = 0; i < REQUEST_BUFFER; i++) {
+            httpRequest[i] = 0;
+          }
           break;
         }
         if (c == '\n') {
@@ -255,10 +295,10 @@ void webServer_thread() {
       }
     }
     // give the web browser time to receive the data
-    delay(1);
+    threads.delay(1);
     // close the connection:
     client.stop();
-    Serial.println("client disconnected");
+    Serial.println("Client disconnected.");
   }
 }
 
