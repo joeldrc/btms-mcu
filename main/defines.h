@@ -1,4 +1,25 @@
 
+
+const char asciiFilledSquare[] = "&#9608;"; //'█';
+const char asciiSpace[] = "_";              //'_';
+
+const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
+
+const char html_1[] PROGMEM = R"rawliteral(
+<html>
+<head>
+<title>BTMS timing</title>
+<meta charset="utf-8" content="url=/">
+</head>
+<body>
+<h1>BTMS timing</h1>
+<p><input type="button" value="Log Out" onclick = "location.href='/?logout'"></p>
+<hr style="color: blue;">
+<p><b>CONTROL PANEL</b></p>
+)rawliteral";
+// <meta charset="utf-8" http-equiv="refresh" content="1; url=/">
+
+
 const uint8_t  IECY =     0;
 const uint8_t ICalStp =   1;
 const uint8_t ICalStrt =  3;
@@ -41,3 +62,7 @@ const uint8_t StsLed5 =   38;
 const uint8_t StsLed4 =   39;
 const uint8_t StsLed3 =   40;
 const uint8_t StsLed2 =   41;
+
+
+const uint32_t samplesNumber = 150; // 2400m
+const uint8_t numTraces = 10;
