@@ -6,7 +6,7 @@
 
 EthernetServer server(80);
 
-volatile bool plot[numTraces][samplesNumber];
+bool plot[numTraces][samplesNumber];
 
 // size of buffer to store HTTP requests
 const uint8_t REQUEST_BUFFER = 100;
@@ -97,24 +97,14 @@ void htmlPage(auto client) {
 
   String htmlPage2 = "";
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
-
     // to be removed
     for (uint32_t i = 0; i < samplesNumber; i++) {
-      static int cnt = 0;
-      static int x = 0;
-      static bool val;
-      if (cnt == x) {
-        val = random(2);  //random numbers from 0 to 1
-        x = random(10);
-        cnt = 0;
-      }
-      else {
-        cnt++;
-      }
-      plot[cnt][i] = val;
+      plot[cnt][i] = random(2);  //random numbers from 0 to 1
     }
 
-    htmlPage2 += "<tr><td style=\"color: blue;\">P1</td><td style=\"color: green;\"><pre>";
+    htmlPage2 += "<tr><td style=\"color: blue;\">";
+    htmlPage2 += traceName[cnt];
+    htmlPage2 += "</td><td style=\"color: green;\"><pre>";
 
     for (uint32_t i = 0; i < samplesNumber; i++) {
       if (plot[cnt][i]) {

@@ -1,16 +1,35 @@
 
 
-// Interrupt variables
-volatile uint64_t StartOfcycle = 0;
-volatile uint64_t CalStart = 0;
-volatile uint64_t CalStop = 0;
-volatile uint64_t Injection = 0;
-volatile uint64_t HarmonicChange = 0;
-volatile uint64_t EndOfCycle = 0;
-
-
 void countCycle() {
-  if (StartOfcycle > 0) {
-    Serial.println(millis());
+  if (startOfcycle > 0) {
+    Serial.println(elapsedMicros());
   }
+}
+
+
+FASTRUN void simulateCycle() {
+  digitalWriteFast(SSCY, HIGH);
+
+  threads.delay(5);
+  digitalWriteFast(SCalStrt, HIGH);
+  threads.delay(5);
+  digitalWriteFast(SCalStrt, LOW);
+
+  threads.delay(100);
+  digitalWriteFast(SCalStp, HIGH);
+  threads.delay(5);
+  digitalWriteFast(SCalStp, LOW);
+
+  threads.delay(170);
+  digitalWriteFast(SINJ, HIGH);
+  threads.delay(5);
+  digitalWriteFast(SINJ, LOW);
+
+  digitalWriteFast(SHCH, LOW);
+  digitalWriteFast(SECY, LOW);
+}
+
+
+FASTRUN void readCycle() {
+  //digitalWriteFast(PIN, seq[ind]);
 }

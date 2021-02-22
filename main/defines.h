@@ -13,11 +13,12 @@ const char html_1[] PROGMEM = R"rawliteral(
 </head>
 <body>
 <h1>BTMS timing</h1>
-<p><input type="button" value="Log Out" onclick = "location.href='/?logout'"></p>
+<p><input type="button" value="Log Out" onclick ="location.href='/?logout'"></p>
 <hr style="color: blue;">
 <p><b>CONTROL PANEL</b></p>
 )rawliteral";
 // <meta charset="utf-8" http-equiv="refresh" content="1; url=/">
+// <body onload="window.open(location.href='/', _top);">
 
 
 const uint8_t  IECY =     0;
@@ -65,4 +66,5 @@ const uint8_t StsLed2 =   41;
 
 
 const uint32_t samplesNumber = 150; // 2400m
-const uint8_t numTraces = 10;
+const uint8_t numTraces = 6;
+const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"HCH"}, {"ECY"}};
