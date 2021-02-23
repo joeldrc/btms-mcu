@@ -24,6 +24,8 @@
 
 
 // Global variables
+uint32_t traceTime[numTraces] = {0};
+
 bool status1 = false;
 bool status2 = false;
 bool status3 = false;
@@ -35,28 +37,41 @@ float v2 = 0;
 float v3 = 0;
 float v4 = 0;
 
-// Interrupt variables
+
+// Timing
+elapsedMillis timing;   // Create elapsedMillis object
+IntervalTimer ledTimer; // Create an IntervalTimer object
+
+
+// interrupt variables
 volatile uint32_t startOfcycle = 0;
 volatile uint32_t calStart = 0;
 volatile uint32_t calStop = 0;
 volatile uint32_t harmonicChange = 0;
 volatile uint32_t endOfCycle = 0;
 
-
 FASTRUN void interrupt_ISCY() {
-  startOfcycle = millis();
+  timing = 0;
+  startOfcycle = timing;
 }
 FASTRUN void interrupt_ICalStrt() {
-  calStart = millis();
+  calStart = timing;
 }
 FASTRUN void interrupt_ICalStp() {
-  calStop = millis();
+  calStop = timing;
 }
 FASTRUN void interrupt_IHCH() {
-  harmonicChange = millis();
+  harmonicChange = timing;
 }
 FASTRUN void interrupt_IECY() {
-  endOfCycle = millis();
+  endOfCycle = timing;
+}
+
+FASTRUN void btn1() {
+  // insert code
+}
+FASTRUN void btn2() {
+  // insert code
 }
 
 
@@ -65,16 +80,18 @@ void ctrlLedThread() {
     static bool ledVal = false;
     digitalWrite(StsLed1, ledVal);
     ledVal = !ledVal;
-
-    Serial.println(startOfcycle);
-    Serial.println(calStart);
-    Serial.println(calStop);
-    Serial.println(harmonicChange);
-    Serial.println(endOfCycle);
-
     threads.delay(100);
     threads.yield();
   }
+}
+
+
+// functions called by IntervalTimer should be short, run as quickly as
+// possible, and should avoid calling other functions if possible.
+FASTRUN void blinkLED() {
+  static bool ledVal = false;
+  digitalWriteFast(StsLed1, ledVal);
+  ledVal = !ledVal;
 }
 
 
@@ -92,6 +109,10 @@ void setup() {
   pinMode(SW4, INPUT_PULLUP);
   pinMode(SW5, INPUT_PULLUP);
   pinMode(SW6, INPUT_PULLUP);
+
+  // Interrupts
+  attachInterrupt(SW5, btn1, FALLING);
+  //attachInterrupt(SW6, btn2, FALLING);
 
   // Outputs LED
   pinMode(StsLedOr, OUTPUT);
@@ -175,14 +196,16 @@ void setup() {
   Serial.println("BTMS mcu serial monitor");
 
   // Start threads
-  threads.addThread(ctrlLedThread, 1);
+  //threads.addThread(ctrlLedThread, 1);
+  ledTimer.begin(blinkLED, 100000);  // blinkLED to run every 0.10 seconds
+
   threads.addThread(ctrlConnection, 1);
   threads.addThread(ethernetConfig_thread, 1);
 }
 
 
 void loop() {
-  webServer_thread();
-  simulateCycle();
+  simulatedCycle();
   readCycle();
+  webServer_thread();
 }

@@ -6,7 +6,7 @@
 
 EthernetServer server(80);
 
-bool plot[numTraces][samplesNumber];
+bool plot[numTraces][samplesNumber] = {0};
 
 // size of buffer to store HTTP requests
 const uint8_t REQUEST_BUFFER = 100;
@@ -104,6 +104,8 @@ void htmlPage(auto client) {
 
     htmlPage2 += "<tr><td style=\"color: blue;\">";
     htmlPage2 += traceName[cnt];
+    htmlPage2 += "</td><td style=\"color: purple;\">";
+    htmlPage2 += traceTime[cnt];
     htmlPage2 += "</td><td style=\"color: green;\"><pre>";
 
     for (uint32_t i = 0; i < samplesNumber; i++) {

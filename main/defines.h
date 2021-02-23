@@ -9,7 +9,7 @@ const char html_1[] PROGMEM = R"rawliteral(
 <html>
 <head>
 <title>BTMS timing</title>
-<meta charset="utf-8" content="url=/">
+<meta charset="utf-8" http-equiv="refresh" content="2; url=/">
 </head>
 <body>
 <h1>BTMS timing</h1>

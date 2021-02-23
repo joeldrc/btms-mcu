@@ -7,7 +7,7 @@ void countCycle() {
 }
 
 
-FASTRUN void simulateCycle() {
+FASTRUN void simulatedCycle() {
   digitalWriteFast(SSCY, HIGH);
 
   threads.delay(5);
@@ -31,5 +31,13 @@ FASTRUN void simulateCycle() {
 
 
 FASTRUN void readCycle() {
+  noInterrupts();
+  traceTime[0] = startOfcycle;
+  traceTime[1] = calStart;
+  traceTime[2] = calStop;
+  traceTime[3] = 0;
+  traceTime[4] = harmonicChange;
+  traceTime[5] = endOfCycle;
+  interrupts();
   //digitalWriteFast(PIN, seq[ind]);
 }
