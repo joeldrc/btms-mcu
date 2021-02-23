@@ -106,7 +106,7 @@ void htmlPage(auto client) {
     htmlPage2 += traceName[cnt];
     htmlPage2 += "</td><td style=\"color: purple;\">";
     htmlPage2 += traceTime[cnt];
-    htmlPage2 += "</td><td style=\"color: green;\"><pre>";
+    htmlPage2 += "</td><td style=\"color: black;\"><pre>";
 
     for (uint32_t i = 0; i < samplesNumber; i++) {
       if (plot[cnt][i]) {
@@ -118,10 +118,12 @@ void htmlPage(auto client) {
     }
     htmlPage2 += "\n";
 
-    for (uint32_t i = 0; i < samplesNumber; i++) {
+    /*
+      for (uint32_t i = 0; i < samplesNumber; i++) {
       htmlPage2 += plot[cnt][i];
-    }
-    htmlPage2 += "\n";
+      }
+      htmlPage2 += "\n";
+    */
     htmlPage2 += "</pre></td>";
   }
 
