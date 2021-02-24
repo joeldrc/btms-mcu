@@ -26,6 +26,7 @@
 // Global variables
 uint32_t traceTime[numTraces] = {0};
 
+
 bool status1 = false;
 bool status2 = false;
 bool status3 = false;
@@ -40,7 +41,6 @@ float v4 = 0;
 
 // Timing
 elapsedMillis timing;   // Create elapsedMillis object
-IntervalTimer ledTimer; // Create an IntervalTimer object
 
 
 // interrupt variables
@@ -49,6 +49,7 @@ volatile uint32_t calStart = 0;
 volatile uint32_t calStop = 0;
 volatile uint32_t harmonicChange = 0;
 volatile uint32_t endOfCycle = 0;
+
 
 FASTRUN void interrupt_ISCY() {
   timing = 0;
@@ -75,23 +76,15 @@ FASTRUN void btn2() {
 }
 
 
-void ctrlLedThread() {
-  while (1) {
-    static bool ledVal = false;
-    digitalWrite(StsLed1, ledVal);
-    ledVal = !ledVal;
-    threads.delay(100);
-    threads.yield();
-  }
-}
-
-
-// functions called by IntervalTimer should be short, run as quickly as
-// possible, and should avoid calling other functions if possible.
-FASTRUN void blinkLED() {
-  static bool ledVal = false;
-  digitalWriteFast(StsLed1, ledVal);
-  ledVal = !ledVal;
+uint8_t readSettingSwitch() {
+  // Read the current four-bit
+  uint8_t b = 0;
+  // The switch are active LOW
+  if (digitalReadFast(SW4) == 0) b |= 1;
+  if (digitalReadFast(SW3) == 0) b |= 2;
+  if (digitalReadFast(SW2) == 0) b |= 4;
+  if (digitalReadFast(SW1) == 0) b |= 8;
+  return (b);
 }
 
 
@@ -196,16 +189,16 @@ void setup() {
   Serial.println("BTMS mcu serial monitor");
 
   // Start threads
-  //threads.addThread(ctrlLedThread, 1);
-  ledTimer.begin(blinkLED, 100000);  // blinkLED to run every 0.10 seconds
-
-  threads.addThread(ctrlConnection, 1);
+  threads.addThread(ctrlLedThread, 1);
+  threads.addThread(ctrlLoop, 1);
   threads.addThread(ethernetConfig_thread, 1);
 }
 
 
 void loop() {
+  // fast cycles
   simulatedCycle();
   readCycle();
+
   webServer_thread();
 }

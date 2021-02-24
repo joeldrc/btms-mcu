@@ -19,8 +19,6 @@ void ethernetConfig_thread() {
     Serial.println("Failed to configure Ethernet using DHCP");
   }
 
-  ctrlConnection();
-
   // start the server
   server.begin();
   Serial.print("MAC: ");
@@ -36,24 +34,26 @@ void ethernetConfig_thread() {
 }
 
 
-void ctrlConnection() {
-  while (1) {
-    auto link = Ethernet.linkStatus();
-    Serial.print("Link status: ");
-    switch (link) {
-      case LinkON:
-        Serial.println("Ethernet cable is connected.");
-        break;
-      case Unknown:
-        Serial.println("Unknown status.");
-        break;
-      case LinkOFF:
-        Serial.println("Ethernet cable is not connected.");
-        break;
-    }
-    threads.delay(1000);
-    threads.yield();
+int8_t ctrlConnection() {
+  auto link = Ethernet.linkStatus();
+  int8_t stat;
+
+  Serial.print("Link status: ");
+  switch (link) {
+    case LinkON:
+      Serial.println("connected.");
+      stat = 1;
+      break;
+    case Unknown:
+      Serial.println("unknown.");
+      stat = -1;
+      break;
+    case LinkOFF:
+      Serial.println("not connected.");
+      stat = 0;
+      break;
   }
+  return stat;
 }
 
 

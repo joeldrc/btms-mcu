@@ -41,3 +41,27 @@ FASTRUN void readCycle() {
   interrupts();
   //digitalWriteFast(PIN, seq[ind]);
 }
+
+
+void ctrlLoop() {
+  while (1) {
+    if (ctrlConnection() != true) {
+      ethernetConfig_thread();
+    }
+    Serial.print("Setting switch: ");
+    Serial.print(readSettingSwitch());
+    Serial.println();
+    threads.delay(1000);
+  }
+}
+
+
+void ctrlLedThread() {
+  while (1) {
+    static bool ledVal = false;
+    digitalWriteFast(StsLedOr, ledVal);
+    digitalWriteFast(StsLedGr, !ledVal);
+    ledVal = !ledVal;
+    threads.delay(150);
+  }
+}
