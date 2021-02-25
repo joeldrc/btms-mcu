@@ -59,7 +59,7 @@ IntervalTimer simulatedTiming;
 
 
 // Timer variables
-volatile const uint32_t pulseTime = 100;       // time in nS
+const uint32_t pulseTime = 1;                  // time in uS
 volatile const uint32_t psTimeCycle = 1200000; // time in uS
 
 volatile const uint32_t scyTime = 0;           // time in uS
@@ -227,7 +227,7 @@ void setup() {
 
 
 void loop() {
-  static uint8_t previousSetting = 255;
+  static int previousSetting = -1;
 
   // fast cycles
   if (previousSetting != operationMode) {
@@ -279,8 +279,10 @@ void loop() {
     previousSetting = operationMode;
   }
 
+
   // read incoming timing on the interrupts
   readCycle();
+
 
   // slow cycle
   if (checkTiming) {

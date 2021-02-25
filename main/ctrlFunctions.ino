@@ -1,6 +1,7 @@
 
 
 volatile uint8_t cnt_cycle = 0;
+volatile uint32_t timerValue = 10000;
 
 
 FASTRUN void readOnly() {
@@ -11,124 +12,142 @@ FASTRUN void readOnly() {
 
 FASTRUN void simulatedCycle1() {
   switch (cnt_cycle) {
-    // ECY
-    case 1: {
-        simulatedTiming.update(psTimeCycle - ecyTime);
-        digitalWriteFast(SECY, HIGH);
-        delayNanoseconds(pulseTime);
-        digitalWriteFast(SECY, LOW);
+    // SCY
+    case 0: {
+        digitalWriteFast(SSCY, HIGH);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SSCY, LOW);
+
+        timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
+        cnt_cycle++;
       }
       break;
+    // ECY
+    case 1: {
+        digitalWriteFast(SECY, HIGH);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SECY, LOW);
+
+        timerValue = ecyTime - scyTime; //time duration of the next cycle
+      }
     // PSB cycle 1.2 sec
     default: {
         checkTiming = true;
         cnt_cycle = 0;
       }
-    // SCY
-    case 0: {
-        simulatedTiming.update(ecyTime - scyTime);
-        digitalWriteFast(SSCY, HIGH);
-        delayNanoseconds(pulseTime);
-        digitalWriteFast(SSCY, LOW);
-      }
       break;
   }
-  cnt_cycle++;
+  simulatedTiming.update(timerValue);
 }
 
 FASTRUN void simulatedCycle2() {
   switch (cnt_cycle) {
+    // SCY
+    case 0: {
+        digitalWriteFast(SSCY, HIGH);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SSCY, LOW);
+
+        timerValue = ecyTime - injTime; //time duration of the next cycle
+        cnt_cycle++;
+      }
+      break;
     // INJ
     case 1: {
-        simulatedTiming.update(ecyTime - injTime);
         digitalWriteFast(SINJ, HIGH);
-        delayNanoseconds(pulseTime);
+        delayMicroseconds(pulseTime);
         digitalWriteFast(SINJ, LOW);
+
+        timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
+        cnt_cycle++;
       }
       break;
     // ECY
     case 2: {
-        simulatedTiming.update(psTimeCycle - ecyTime);
         digitalWriteFast(SECY, HIGH);
-        delayNanoseconds(pulseTime);
+        delayMicroseconds(pulseTime);
         digitalWriteFast(SECY, LOW);
+
+        timerValue = injTime - scyTime; //time duration of the next cycle
       }
-      break;
     // PSB cycle 1.2 sec
     default: {
         checkTiming = true;
         cnt_cycle = 0;
       }
-    // SCY
-    case 0: {
-        simulatedTiming.update(injTime - scyTime);
-        digitalWriteFast(SSCY, HIGH);
-        delayNanoseconds(pulseTime);
-        digitalWriteFast(SSCY, LOW);
-      }
       break;
   }
-  cnt_cycle++;
+  simulatedTiming.update(timerValue);
 }
 
 
 FASTRUN void simulatedCycle3() {
   switch (cnt_cycle) {
+    // SCY
+    case 0: {
+        digitalWriteFast(SSCY, HIGH);
+        delayMicroseconds(pulseTime);
+        //digitalWriteFast(SSCY, LOW);
+
+        timerValue = calstopTime - calstartTime; // time duration of the next cycle
+        cnt_cycle++;
+      }
+      break;
     // CALSTART
     case 1: {
-        simulatedTiming.update(calstopTime - calstartTime);
         digitalWriteFast(SCalStrt, HIGH);
-        delayNanoseconds(pulseTime);
+        delayMicroseconds(pulseTime);
         digitalWriteFast(SCalStrt, LOW);
+
+        timerValue = injTime - calstopTime; // time duration of the next cycle
+        cnt_cycle++;
       }
       break;
     // CALSTOP
     case 2: {
-        simulatedTiming.update(injTime - calstopTime);
         digitalWriteFast(SCalStp, HIGH);
-        delayNanoseconds(pulseTime);
+        delayMicroseconds(pulseTime);
         digitalWriteFast(SCalStp, LOW);
+
+        timerValue = hchTime - injTime; // time duration of the next cycle
+        cnt_cycle++;
       }
       break;
     // INJ
     case 3: {
-        simulatedTiming.update(hchTime - injTime);
         digitalWriteFast(SINJ, HIGH);
-        delayNanoseconds(pulseTime);
+        delayMicroseconds(pulseTime);
         digitalWriteFast(SINJ, LOW);
+
+        timerValue = ecyTime - hchTime; // time duration of the next cycle
+        cnt_cycle++;
       }
       break;
     // HCH
     case 4: {
-        simulatedTiming.update(ecyTime - hchTime);
         digitalWriteFast(SHCH, HIGH);
-        delayNanoseconds(pulseTime);
+        delayMicroseconds(pulseTime);
         digitalWriteFast(SHCH, LOW);
+
+        timerValue = psTimeCycle - ecyTime; // time duration of the next cycle
+        cnt_cycle++;
       }
       break;
     // ECY
     case 5: {
-        simulatedTiming.update(psTimeCycle - ecyTime);
         digitalWriteFast(SECY, HIGH);
-        delayNanoseconds(pulseTime);
+        delayMicroseconds(pulseTime);
         digitalWriteFast(SECY, LOW);
+
+        timerValue = calstartTime - scyTime; // time duration of the next cycle
       }
-      break;
     // PSB cycle 1.2 sec
     default: {
         checkTiming = true;
         cnt_cycle = 0;
       }
-    // SCY
-    case 0: {
-        simulatedTiming.update(calstartTime - scyTime);
-        digitalWriteFast(SSCY, HIGH);
-        delayNanoseconds(pulseTime);
-        digitalWriteFast(SSCY, LOW);
-      }
-      break;
   }
-  cnt_cycle++;
+  simulatedTiming.update(timerValue);
 }
 
 

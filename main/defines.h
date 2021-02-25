@@ -1,7 +1,7 @@
 
 
 // pin assignment
-const uint8_t  IECY =     0;
+const uint8_t IECY =      0;
 const uint8_t ICalStp =   1;
 const uint8_t ICalStrt =  3;
 const uint8_t ISCY  =     4;
