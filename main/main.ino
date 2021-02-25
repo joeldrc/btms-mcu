@@ -23,6 +23,12 @@
 
 
 /*** Global variables **/
+// 0: read only
+// 1: simulate SCY and ECY
+// 2: simulate SCY, INJ and ECY
+// 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
+uint8_t operationMode = 0;
+
 
 // plot for webPage
 const uint32_t samplesNumber = 150; // 2400m
@@ -221,27 +227,65 @@ void setup() {
 
 
 void loop() {
+  static uint8_t previousSetting = 255;
+
   // fast cycles
-  static uint8_t simulatedMode = 1;
+  if (previousSetting != operationMode) {
+    switch (operationMode) {
+      case 0: {
+          simulatedTiming.begin(readOnly, ecyTime);
 
-  if (simulatedMode == 1) {
-    // The interval is specified in microseconds,
-    // which may be an integer or floating point number,
-    // for more highly precise timing.
-    simulatedTiming.begin(simulatedCycle, 100000);
-    //Serial.println("Timer start");
-    simulatedMode++;
-  }
-  else if (simulatedMode == 0) {
-    simulatedTiming.end();
+          digitalWriteFast(StsLedOr, LOW);
+        }
+        break;
+
+      case 1: {
+          // The interval is specified in microseconds,
+          // which may be an integer or floating point number,
+          // for more highly precise timing.
+          simulatedTiming.begin(simulatedCycle1, 100000);
+
+          digitalWriteFast(StsLedOr, HIGH);
+        }
+        break;
+
+      case 2: {
+          // The interval is specified in microseconds,
+          // which may be an integer or floating point number,
+          // for more highly precise timing.
+          simulatedTiming.begin(simulatedCycle2, 100000);
+
+          digitalWriteFast(StsLedOr, HIGH);
+        }
+        break;
+
+      case 3: {
+          // The interval is specified in microseconds,
+          // which may be an integer or floating point number,
+          // for more highly precise timing.
+          simulatedTiming.begin(simulatedCycle3, 100000);
+
+          digitalWriteFast(StsLedOr, HIGH);
+        }
+        break;
+
+      default: {
+          operationMode = 0;
+        }
+        break;
+    }
+    Serial.print("Operation mode: ");
+    Serial.println(operationMode);
+    previousSetting = operationMode;
   }
 
+  // read incoming timing on the interrupts
   readCycle();
 
   // slow cycle
   if (checkTiming) {
-    ctrlLedThread();
     ctrlLoop();
+
     noInterrupts();
     checkTiming = false;
     interrupts();

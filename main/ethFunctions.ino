@@ -5,14 +5,12 @@
 #include "src\NativeEthernet\NativeEthernet.h"
 
 EthernetServer server(80);
+uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
+bool plot[numTraces][samplesNumber] = {0};
 
 
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
-
-
-const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
-
 
 const char html_1[] PROGMEM = R"rawliteral(
 <html>
@@ -28,9 +26,6 @@ const char html_1[] PROGMEM = R"rawliteral(
 )rawliteral";
 // <meta charset="utf-8" http-equiv="refresh" content="1; url=/">
 // <body onload="window.open(location.href='/', _top);">
-
-
-bool plot[numTraces][samplesNumber] = {0};
 
 
 // size of buffer to store HTTP requests
@@ -58,26 +53,27 @@ void ethernetConfig_thread() {
 }
 
 
-int8_t ctrlConnection() {
+int ctrlConnection() {
   auto link = Ethernet.linkStatus();
-  int8_t stat;
-
+  
   Serial.print("Link status: ");
   switch (link) {
     case LinkON:
       Serial.println("connected.");
-      stat = 1;
+      return 1;
       break;
     case Unknown:
       Serial.println("unknown.");
-      stat = -1;
+      return -1;
       break;
     case LinkOFF:
       Serial.println("not connected.");
-      stat = 0;
+      return 0;
       break;
+    default:{
+      return -2;
+    }
   }
-  return stat;
 }
 
 
