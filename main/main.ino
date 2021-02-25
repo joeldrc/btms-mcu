@@ -234,7 +234,7 @@ void loop() {
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 0: {
-          simulatedTiming.begin(readOnly, timerValue);
+          simulatedTiming.begin(readOnly, psTimeCycle);
           digitalWriteFast(StsLedOr, LOW);
         }
         break;
@@ -243,7 +243,7 @@ void loop() {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle1, timerValue);
+          simulatedTiming.begin(simulatedCycle1, psTimeCycle);
           digitalWriteFast(StsLedOr, HIGH);
         }
         break;
@@ -252,7 +252,7 @@ void loop() {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle2, timerValue);
+          simulatedTiming.begin(simulatedCycle2, psTimeCycle);
           digitalWriteFast(StsLedOr, HIGH);
         }
         break;
@@ -261,7 +261,7 @@ void loop() {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle3, timerValue);
+          simulatedTiming.begin(simulatedCycle3, psTimeCycle);
           digitalWriteFast(StsLedOr, HIGH);
         }
         break;
