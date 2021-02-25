@@ -23,6 +23,12 @@
 
 
 /*** Global variables **/
+// 0: read only
+// 1: simulate SCY and ECY
+// 2: simulate SCY, INJ and ECY
+// 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
+uint8_t operationMode = 0;
+
 
 // plot for webPage
 const uint32_t samplesNumber = 150; // 2400m
@@ -53,7 +59,7 @@ IntervalTimer simulatedTiming;
 
 
 // Timer variables
-volatile const uint32_t pulseTime = 100;       // time in nS
+const uint32_t pulseTime = 1;                  // time in uS
 volatile const uint32_t psTimeCycle = 1200000; // time in uS
 
 volatile const uint32_t scyTime = 0;           // time in uS
@@ -63,6 +69,7 @@ volatile const uint32_t injTime = 170000;      // time in uS
 volatile const uint32_t hchTime = 400000;      // time in uS
 volatile const uint32_t ecyTime = 805000;      // time in uS
 
+volatile uint32_t timerValue = 10000;
 volatile bool checkTiming = true;
 
 
@@ -221,27 +228,62 @@ void setup() {
 
 
 void loop() {
+  static int previousSetting = -1;
+
   // fast cycles
-  static uint8_t simulatedMode = 1;
+  if (previousSetting != operationMode) {
+    switch (operationMode) {
+      case 0: {
+          simulatedTiming.begin(readOnly, psTimeCycle);
+          digitalWriteFast(StsLedOr, LOW);
+        }
+        break;
 
-  if (simulatedMode == 1) {
-    // The interval is specified in microseconds,
-    // which may be an integer or floating point number,
-    // for more highly precise timing.
-    simulatedTiming.begin(simulatedCycle, 100000);
-    //Serial.println("Timer start");
-    simulatedMode++;
-  }
-  else if (simulatedMode == 0) {
-    simulatedTiming.end();
+      case 1: {
+          // The interval is specified in microseconds,
+          // which may be an integer or floating point number,
+          // for more highly precise timing.
+          simulatedTiming.begin(simulatedCycle1, psTimeCycle);
+          digitalWriteFast(StsLedOr, HIGH);
+        }
+        break;
+
+      case 2: {
+          // The interval is specified in microseconds,
+          // which may be an integer or floating point number,
+          // for more highly precise timing.
+          simulatedTiming.begin(simulatedCycle2, psTimeCycle);
+          digitalWriteFast(StsLedOr, HIGH);
+        }
+        break;
+
+      case 3: {
+          // The interval is specified in microseconds,
+          // which may be an integer or floating point number,
+          // for more highly precise timing.
+          simulatedTiming.begin(simulatedCycle3, psTimeCycle);
+          digitalWriteFast(StsLedOr, HIGH);
+        }
+        break;
+      default: {
+          operationMode = 0;
+        }
+        break;
+    }
+    Serial.print("Operation mode: ");
+    Serial.println(operationMode);
+    previousSetting = operationMode;
   }
 
+
+  // read incoming timing on the interrupts
   readCycle();
+
 
   // slow cycle
   if (checkTiming) {
-    ctrlLedThread();
     ctrlLoop();
+
     noInterrupts();
     checkTiming = false;
     interrupts();

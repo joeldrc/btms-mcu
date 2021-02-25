@@ -5,20 +5,18 @@
 #include "src\NativeEthernet\NativeEthernet.h"
 
 EthernetServer server(80);
+uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
+bool plot[numTraces][samplesNumber] = {0};
 
 
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
-
-const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
-
-
 const char html_1[] PROGMEM = R"rawliteral(
 <html>
 <head>
 <title>BTMS timing</title>
-<meta charset="utf-8" http-equiv="refresh" content="2; url=/">
+<meta charset="utf-8">
 </head>
 <body>
 <h1>BTMS timing</h1>
@@ -28,9 +26,6 @@ const char html_1[] PROGMEM = R"rawliteral(
 )rawliteral";
 // <meta charset="utf-8" http-equiv="refresh" content="1; url=/">
 // <body onload="window.open(location.href='/', _top);">
-
-
-bool plot[numTraces][samplesNumber] = {0};
 
 
 // size of buffer to store HTTP requests
@@ -58,26 +53,27 @@ void ethernetConfig_thread() {
 }
 
 
-int8_t ctrlConnection() {
+int ctrlConnection() {
   auto link = Ethernet.linkStatus();
-  int8_t stat;
-
+  
   Serial.print("Link status: ");
   switch (link) {
     case LinkON:
       Serial.println("connected.");
-      stat = 1;
+      return 1;
       break;
     case Unknown:
       Serial.println("unknown.");
-      stat = -1;
+      return -1;
       break;
     case LinkOFF:
       Serial.println("not connected.");
-      stat = 0;
+      return 0;
       break;
+    default:{
+      return -2;
+    }
   }
-  return stat;
 }
 
 
@@ -96,7 +92,13 @@ void htmlPage(auto client) {
   else if (httpRequest.indexOf("?b4")  > 0) {
     status4 = !status4;
   }
-
+  else if (httpRequest.indexOf("?opMode")  > 0) {
+    int posVal = httpRequest.indexOf("?opMode");
+    String subString = httpRequest.substring(posVal + 8, posVal + 9);
+    //Serial.println(subString);
+    operationMode = subString.toInt();
+  }
+  
   String htmlPage2 = "";
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
     
@@ -135,58 +137,77 @@ void htmlPage(auto client) {
   v1 = 0;
   v2 = 0;
 
+
   // start html
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/html");
-  client.println("Connection: close");  // the connection will be closed after completion of the response
-  //client.println("Refresh: 1");       // refresh the page automatically
-  client.println();
+  String htmlPage = "";
+  htmlPage += "HTTP/1.1 200 OK";
+  htmlPage += "Content-Type: text/html";
+  htmlPage += "Connection: close";
+  //htmlPage += "Refresh: 1";
+  htmlPage += "Connection: close";
+  htmlPage += "\n";
 
-  String htmlPage = html_1;
+  htmlPage +=  html_1;
+  
+  htmlPage += "<form action=/>";
+  htmlPage += "Operation mode: ";
+  htmlPage += operationMode;
+  htmlPage += " ";
+  htmlPage += "<select name=\"opMode\" id=\"opMode\"><option value=\"0\">0</option><option value=\"1\">1</option><option value=\"2\">2</option><option value=\"3\">3</option></select>";
+  htmlPage += "<button type=”submit”>Submit</button>";  
+  htmlPage += "</button></form>";
+
+  htmlPage += "<table>";
+  htmlPage += "<tr><th>Name</th><th>Switch</th><th>Status</th></tr>";
+  htmlPage += "<tr><td>Switch1</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b1'\"></td><td";
+  if (status1){
+    htmlPage += " bgcolor=\"lime\"";
+  }
+  htmlPage += ">";
+  htmlPage += status1;
+  htmlPage += "</td></tr>";
+
+  htmlPage += "<tr><td>Switch2</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b2'\"></td><td";
+  if (status2){
+    htmlPage += " bgcolor=\"lime\"";
+  }
+  htmlPage += ">";
+  htmlPage += status2;
+  htmlPage += "</td></tr>";
+
+  htmlPage += "<tr><td>Switch3</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b3'\"></td><td";
+  if (status3){
+    htmlPage += " bgcolor=\"lime\"";
+  }
+  htmlPage += ">";
+  htmlPage += status3;
+  htmlPage += "</td></tr>";
+
+  htmlPage += "<tr><td>Switch4</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b4'\"></td><td";
+  if (status4){
+    htmlPage += " bgcolor=\"lime\"";
+  }
+  htmlPage += ">";
+  htmlPage += status4;
+  htmlPage += "</td></tr>";
+  htmlPage += "</table><br/>";
+
+  htmlPage += "<p><b>Analog read</b><br/></p>";
+  htmlPage += "V1 = ";
+  htmlPage += v1;
+  htmlPage += "<br/>V2 = ";
+  htmlPage += v2;
+
+  htmlPage += "<br><br>";
+  htmlPage += "<table><tr><th>Name</th><th> </th></tr>"; 
+  htmlPage += htmlPage2; 
+  htmlPage += "</tr></table></body>";
+  htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
+  htmlPage += "</html>";
+
+  // send html page
   client.println(htmlPage);
-
-  client.println("<table>");
-  client.println("<tr><th>Name</th><th>Switch</th><th>Status</th></tr>");
-  client.print("<tr><td>Switch1</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b1'\"></td><td");
-  if (status1) client.print (" bgcolor=\"lime\"");
-  client.print(">");
-  client.print(status1);
-  client.println("</td></tr>");
-
-  client.print("<tr><td>Switch2</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b2'\"></td><td");
-  if (status2) client.print (" bgcolor=\"lime\"");
-  client.print(">");
-  client.print(status2);
-  client.println("</td></tr>");
-
-  client.print("<tr><td>Switch3</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b3'\"></td><td");
-  if (status3) client.print (" bgcolor=\"lime\"");
-  client.print(">");
-  client.print(status3);
-  client.println("</td></tr>");
-
-  client.print("<tr><td>Switch4</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b4'\"></td><td");
-  if (status4) client.print (" bgcolor=\"lime\"");
-  client.print(">");
-  client.print(status4);
-  client.println("</td></tr>");
-
-  client.println("</table>");
-  client.println("<br/>");
-
-  client.println("<p><b>Analog read</b><br/></p>");
-  client.print("V1 = ");
-  client.println(v1);
-  client.print("<br/>V2 = ");
-  client.println(v2);
-
-  client.println("<br><br>");
-  client.println("<table><tr><th>Name</th><th> </th></tr>");
-  client.println(htmlPage2);
-  client.println("</tr></table></body>");
-  client.println("<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>");
-  client.println("</html>");
-
+  
   // close client connection
   client.close();
 }
