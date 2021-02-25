@@ -1,7 +1,6 @@
 
 
 volatile uint8_t cnt_cycle = 0;
-volatile uint32_t timerValue = 10000;
 
 
 FASTRUN void readOnly() {
@@ -87,7 +86,7 @@ FASTRUN void simulatedCycle3() {
     case 0: {
         digitalWriteFast(SSCY, HIGH);
         delayMicroseconds(pulseTime);
-        //digitalWriteFast(SSCY, LOW);
+        digitalWriteFast(SSCY, LOW);
 
         timerValue = calstopTime - calstartTime; // time duration of the next cycle
         cnt_cycle++;

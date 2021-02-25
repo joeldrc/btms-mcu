@@ -69,6 +69,7 @@ volatile const uint32_t injTime = 170000;      // time in uS
 volatile const uint32_t hchTime = 400000;      // time in uS
 volatile const uint32_t ecyTime = 805000;      // time in uS
 
+volatile uint32_t timerValue = 10000;
 volatile bool checkTiming = true;
 
 
@@ -233,8 +234,7 @@ void loop() {
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 0: {
-          simulatedTiming.begin(readOnly, ecyTime);
-
+          simulatedTiming.begin(readOnly, timerValue);
           digitalWriteFast(StsLedOr, LOW);
         }
         break;
@@ -243,8 +243,7 @@ void loop() {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle1, 100000);
-
+          simulatedTiming.begin(simulatedCycle1, timerValue);
           digitalWriteFast(StsLedOr, HIGH);
         }
         break;
@@ -253,8 +252,7 @@ void loop() {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle2, 100000);
-
+          simulatedTiming.begin(simulatedCycle2, timerValue);
           digitalWriteFast(StsLedOr, HIGH);
         }
         break;
@@ -263,12 +261,10 @@ void loop() {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle3, 100000);
-
+          simulatedTiming.begin(simulatedCycle3, timerValue);
           digitalWriteFast(StsLedOr, HIGH);
         }
         break;
-
       default: {
           operationMode = 0;
         }
