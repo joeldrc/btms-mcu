@@ -22,18 +22,7 @@
 #include <ADC_util.h>
 
 
-// Global variables
-const uint32_t pulseTime = 1;         // time in uS
-const uint32_t psTimeCycle = 1200000; // time in uS
-
-const uint32_t scyTime = 0;           // time in uS
-const uint32_t calstartTime = 5000;   // time in uS
-const uint32_t calstopTime = 100000;  // time in uS
-const uint32_t injTime = 170000;      // time in uS
-const uint32_t hchTime = 400000;      // time in uS
-const uint32_t ecyTime = 805000;      // time in uS
-
-volatile bool checkTiming = true;
+/*** Global variables **/
 
 // plot for webPage
 const uint32_t samplesNumber = 150; // 2400m
@@ -55,11 +44,26 @@ float v3 = 0;
 float v4 = 0;
 
 
-// Timing
-elapsedMicros timing;           // Create elapsedMicros object
+// Timing object
+elapsedMicros timing;
+
 
 // Timer object
 IntervalTimer simulatedTiming;
+
+
+// Timer variables
+volatile const uint32_t pulseTime = 100;       // time in nS
+volatile const uint32_t psTimeCycle = 1200000; // time in uS
+
+volatile const uint32_t scyTime = 0;           // time in uS
+volatile const uint32_t calstartTime = 5000;   // time in uS
+volatile const uint32_t calstopTime = 100000;  // time in uS
+volatile const uint32_t injTime = 170000;      // time in uS
+volatile const uint32_t hchTime = 400000;      // time in uS
+volatile const uint32_t ecyTime = 805000;      // time in uS
+
+volatile bool checkTiming = true;
 
 
 // interrupt variables
@@ -68,6 +72,7 @@ volatile uint32_t calStart = 0;
 volatile uint32_t calStop = 0;
 volatile uint32_t harmonicChange = 0;
 volatile uint32_t endOfCycle = 0;
+
 
 // interrupt functions
 FASTRUN void interrupt_ISCY() {
@@ -208,7 +213,10 @@ void setup() {
   Serial.println("BTMS mcu serial monitor");
 
   // Timer setup
-  simulatedTiming.priority(1);  // Set the interrupt priority level, controlling which other interrupts this timer is allowed to interrupt. Lower numbers are higher priority, with 0 the highest and 255 the lowest.
+  // Set the interrupt priority level,
+  // controlling which other interrupts this timer is allowed to interrupt.
+  // Lower numbers are higher priority, with 0 the highest and 255 the lowest.
+  simulatedTiming.priority(1);
 }
 
 
@@ -217,7 +225,10 @@ void loop() {
   static uint8_t simulatedMode = 1;
 
   if (simulatedMode == 1) {
-    simulatedTiming.begin(simulatedCycle, 100000);  //The interval is specified in microseconds, which may be an integer or floating point number, for more highly precise timing.
+    // The interval is specified in microseconds,
+    // which may be an integer or floating point number,
+    // for more highly precise timing.
+    simulatedTiming.begin(simulatedCycle, 100000);
     //Serial.println("Timer start");
     simulatedMode++;
   }

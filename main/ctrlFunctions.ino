@@ -9,7 +9,7 @@ FASTRUN void simulatedCycle() {
     case 1: {
         simulatedTiming.update(calstartTime - calstopTime);
         digitalWriteFast(SCalStrt, HIGH);
-        delayNanoseconds(100);
+        delayNanoseconds(pulseTime);
         digitalWriteFast(SCalStrt, LOW);
       }
       break;
@@ -18,7 +18,7 @@ FASTRUN void simulatedCycle() {
     case 2: {
         simulatedTiming.update(calstopTime - injTime);
         digitalWriteFast(SCalStp, HIGH);
-        delayNanoseconds(100);
+        delayNanoseconds(pulseTime);
         digitalWriteFast(SCalStp, LOW);
       }
       break;
@@ -27,7 +27,7 @@ FASTRUN void simulatedCycle() {
     case 3: {
         simulatedTiming.update(injTime - hchTime);
         digitalWriteFast(SINJ, HIGH);
-        delayNanoseconds(100);
+        delayNanoseconds(pulseTime);
         digitalWriteFast(SINJ, LOW);
       }
       break;
@@ -36,7 +36,7 @@ FASTRUN void simulatedCycle() {
     case 4: {
         simulatedTiming.update(hchTime - ecyTime);
         digitalWriteFast(SHCH, HIGH);
-        delayNanoseconds(100);
+        delayNanoseconds(pulseTime);
         digitalWriteFast(SHCH, LOW);
       }
       break;
@@ -45,7 +45,7 @@ FASTRUN void simulatedCycle() {
     case 5: {
         simulatedTiming.update(ecyTime - psTimeCycle);
         digitalWriteFast(SECY, HIGH);
-        delayNanoseconds(100);
+        delayNanoseconds(pulseTime);
         digitalWriteFast(SECY, LOW);
       }
       break;
@@ -60,7 +60,7 @@ FASTRUN void simulatedCycle() {
     case 0: {
         simulatedTiming.update(scyTime - calstartTime);
         digitalWriteFast(SSCY, HIGH);
-        delayNanoseconds(100);
+        delayNanoseconds(pulseTime);
         digitalWriteFast(SSCY, LOW);
       }
       break;
