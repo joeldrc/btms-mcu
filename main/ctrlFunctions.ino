@@ -1,32 +1,73 @@
 
 
-void countCycle() {
-  if (startOfcycle > 0) {
-    Serial.println(elapsedMicros());
-  }
-}
-
+volatile uint8_t cnt_cycle = 0;
 
 FASTRUN void simulatedCycle() {
-  digitalWriteFast(SSCY, HIGH);
+  switch (cnt_cycle) {
 
-  threads.delay(5);
-  digitalWriteFast(SCalStrt, HIGH);
-  threads.delay(5);
-  digitalWriteFast(SCalStrt, LOW);
+    // CALSTART
+    case 1: {
+        simulatedTiming.update(calstartTime - calstopTime);
+        digitalWriteFast(SCalStrt, HIGH);
+        delayNanoseconds(pulseTime);
+        digitalWriteFast(SCalStrt, LOW);
+      }
+      break;
 
-  threads.delay(100);
-  digitalWriteFast(SCalStp, HIGH);
-  threads.delay(5);
-  digitalWriteFast(SCalStp, LOW);
+    // CALSTOP
+    case 2: {
+        simulatedTiming.update(calstopTime - injTime);
+        digitalWriteFast(SCalStp, HIGH);
+        delayNanoseconds(pulseTime);
+        digitalWriteFast(SCalStp, LOW);
+      }
+      break;
 
-  threads.delay(170);
-  digitalWriteFast(SINJ, HIGH);
-  threads.delay(5);
-  digitalWriteFast(SINJ, LOW);
+    // INJ
+    case 3: {
+        simulatedTiming.update(injTime - hchTime);
+        digitalWriteFast(SINJ, HIGH);
+        delayNanoseconds(pulseTime);
+        digitalWriteFast(SINJ, LOW);
+      }
+      break;
 
-  digitalWriteFast(SHCH, LOW);
-  digitalWriteFast(SECY, LOW);
+    // HCH
+    case 4: {
+        simulatedTiming.update(hchTime - ecyTime);
+        digitalWriteFast(SHCH, HIGH);
+        delayNanoseconds(pulseTime);
+        digitalWriteFast(SHCH, LOW);
+      }
+      break;
+
+    // ECY
+    case 5: {
+        simulatedTiming.update(ecyTime - psTimeCycle);
+        digitalWriteFast(SECY, HIGH);
+        delayNanoseconds(pulseTime);
+        digitalWriteFast(SECY, LOW);
+      }
+      break;
+
+    // PSB cycle 1.2 sec
+    case 6: {
+        checkTiming = true;
+        cnt_cycle = 0;
+      }
+
+    // SCY
+    case 0: {
+        simulatedTiming.update(scyTime - calstartTime);
+        digitalWriteFast(SSCY, HIGH);
+        delayNanoseconds(pulseTime);
+        digitalWriteFast(SSCY, LOW);
+      }
+      break;
+  }
+
+  cnt_cycle++;
+  //__asm__ volatile("nop" "\n\t");
 }
 
 
@@ -39,5 +80,26 @@ FASTRUN void readCycle() {
   traceTime[4] = harmonicChange;
   traceTime[5] = endOfCycle;
   interrupts();
-  //digitalWriteFast(PIN, seq[ind]);
+}
+
+
+void ctrlLoop() {
+  static bool ledVal = false;
+  digitalWriteFast(StsLed1, ledVal);
+  ledVal = !ledVal;
+
+  if (ctrlConnection() != true) {
+    ethernetConfig_thread();
+  }
+  Serial.print("Setting switch: ");
+  Serial.print(readSettingSwitch());
+  Serial.println();
+}
+
+
+void ctrlLedThread() {
+  static bool ledVal = false;
+  digitalWriteFast(StsLedOr, ledVal);
+  digitalWriteFast(StsLedGr, !ledVal);
+  ledVal = !ledVal;
 }

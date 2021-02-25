@@ -20,27 +20,50 @@
 
 #include <ADC.h>
 #include <ADC_util.h>
-#include "src\TeensyThreads\TeensyThreads.h"
 
 
-// Global variables
+/*** Global variables **/
+
+// plot for webPage
+const uint32_t samplesNumber = 150; // 2400m
+const uint8_t numTraces = 5;
+const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"ECY"}};
+
 uint32_t traceTime[numTraces] = {0};
 
+
+// other webPage
 bool status1 = false;
 bool status2 = false;
 bool status3 = false;
 bool status4 = false;
 bool status5 = false;
-
 float v1 = 0;
 float v2 = 0;
 float v3 = 0;
 float v4 = 0;
 
 
-// Timing
-elapsedMillis timing;   // Create elapsedMillis object
-IntervalTimer ledTimer; // Create an IntervalTimer object
+// Timing object
+elapsedMicros timing;
+
+
+// Timer object
+IntervalTimer simulatedTiming;
+
+
+// Timer variables
+volatile const uint32_t pulseTime = 100;       // time in nS
+volatile const uint32_t psTimeCycle = 1200000; // time in uS
+
+volatile const uint32_t scyTime = 0;           // time in uS
+volatile const uint32_t calstartTime = 5000;   // time in uS
+volatile const uint32_t calstopTime = 100000;  // time in uS
+volatile const uint32_t injTime = 170000;      // time in uS
+volatile const uint32_t hchTime = 400000;      // time in uS
+volatile const uint32_t ecyTime = 805000;      // time in uS
+
+volatile bool checkTiming = true;
 
 
 // interrupt variables
@@ -50,6 +73,8 @@ volatile uint32_t calStop = 0;
 volatile uint32_t harmonicChange = 0;
 volatile uint32_t endOfCycle = 0;
 
+
+// interrupt functions
 FASTRUN void interrupt_ISCY() {
   timing = 0;
   startOfcycle = timing;
@@ -75,23 +100,15 @@ FASTRUN void btn2() {
 }
 
 
-void ctrlLedThread() {
-  while (1) {
-    static bool ledVal = false;
-    digitalWrite(StsLed1, ledVal);
-    ledVal = !ledVal;
-    threads.delay(100);
-    threads.yield();
-  }
-}
-
-
-// functions called by IntervalTimer should be short, run as quickly as
-// possible, and should avoid calling other functions if possible.
-FASTRUN void blinkLED() {
-  static bool ledVal = false;
-  digitalWriteFast(StsLed1, ledVal);
-  ledVal = !ledVal;
+uint8_t readSettingSwitch() {
+  // Read the current four-bit
+  uint8_t b = 0;
+  // The switch are active LOW
+  if (digitalReadFast(SW4) == 0) b |= 1;
+  if (digitalReadFast(SW3) == 0) b |= 2;
+  if (digitalReadFast(SW2) == 0) b |= 4;
+  if (digitalReadFast(SW1) == 0) b |= 8;
+  return (b);
 }
 
 
@@ -195,17 +212,40 @@ void setup() {
   Serial.begin(9600);
   Serial.println("BTMS mcu serial monitor");
 
-  // Start threads
-  //threads.addThread(ctrlLedThread, 1);
-  ledTimer.begin(blinkLED, 100000);  // blinkLED to run every 0.10 seconds
-
-  threads.addThread(ctrlConnection, 1);
-  threads.addThread(ethernetConfig_thread, 1);
+  // Timer setup
+  // Set the interrupt priority level,
+  // controlling which other interrupts this timer is allowed to interrupt.
+  // Lower numbers are higher priority, with 0 the highest and 255 the lowest.
+  simulatedTiming.priority(1);
 }
 
 
 void loop() {
-  simulatedCycle();
+  // fast cycles
+  static uint8_t simulatedMode = 1;
+
+  if (simulatedMode == 1) {
+    // The interval is specified in microseconds,
+    // which may be an integer or floating point number,
+    // for more highly precise timing.
+    simulatedTiming.begin(simulatedCycle, 100000);
+    //Serial.println("Timer start");
+    simulatedMode++;
+  }
+  else if (simulatedMode == 0) {
+    simulatedTiming.end();
+  }
+
   readCycle();
+
+  // slow cycle
+  if (checkTiming) {
+    ctrlLedThread();
+    ctrlLoop();
+    noInterrupts();
+    checkTiming = false;
+    interrupts();
+  }
+
   webServer_thread();
 }

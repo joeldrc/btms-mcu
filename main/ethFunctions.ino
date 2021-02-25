@@ -6,20 +6,42 @@
 
 EthernetServer server(80);
 
+
+const char asciiFilledSquare[] = "&#9608;"; //'█';
+const char asciiSpace[] = "_";              //'_';
+
+
+const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
+
+
+const char html_1[] PROGMEM = R"rawliteral(
+<html>
+<head>
+<title>BTMS timing</title>
+<meta charset="utf-8" http-equiv="refresh" content="2; url=/">
+</head>
+<body>
+<h1>BTMS timing</h1>
+<p><input type="button" value="Log Out" onclick ="location.href='/?logout'"></p>
+<hr style="color: blue;">
+<p><b>CONTROL PANEL</b></p>
+)rawliteral";
+// <meta charset="utf-8" http-equiv="refresh" content="1; url=/">
+// <body onload="window.open(location.href='/', _top);">
+
+
 bool plot[numTraces][samplesNumber] = {0};
+
 
 // size of buffer to store HTTP requests
 const uint8_t REQUEST_BUFFER = 100;
-uint16_t charCnt = 0;
-char httpRequest[REQUEST_BUFFER] = {0};   // HTTP request string
+String httpRequest= ""; // HTTP request string
 
 
 void ethernetConfig_thread() {
   if (Ethernet.begin(mac, 60000, 4000) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
   }
-
-  ctrlConnection();
 
   // start the server
   server.begin();
@@ -36,72 +58,55 @@ void ethernetConfig_thread() {
 }
 
 
-void ctrlConnection() {
-  while (1) {
-    auto link = Ethernet.linkStatus();
-    Serial.print("Link status: ");
-    switch (link) {
-      case LinkON:
-        Serial.println("Ethernet cable is connected.");
-        break;
-      case Unknown:
-        Serial.println("Unknown status.");
-        break;
-      case LinkOFF:
-        Serial.println("Ethernet cable is not connected.");
-        break;
-    }
-    threads.delay(1000);
-    threads.yield();
+int8_t ctrlConnection() {
+  auto link = Ethernet.linkStatus();
+  int8_t stat;
+
+  Serial.print("Link status: ");
+  switch (link) {
+    case LinkON:
+      Serial.println("connected.");
+      stat = 1;
+      break;
+    case Unknown:
+      Serial.println("unknown.");
+      stat = -1;
+      break;
+    case LinkOFF:
+      Serial.println("not connected.");
+      stat = 0;
+      break;
   }
-}
-
-
-// searches for a needle in the haystack
-char SearchForRequest(char *haystack, char *needle) {
-  char needle_index = 0;
-  char haystack_index = 0;
-  char haystack_length;
-
-  haystack_length = strlen(haystack);
-  if (strlen(needle) > haystack_length) return 0;
-  while (haystack_index < haystack_length) {
-    if (haystack[haystack_index] == needle[needle_index]) {
-      needle_index++;
-      if (needle_index == strlen(needle)) return 1; // found needle
-    }
-    else needle_index = 0;
-    haystack_index++;
-  }
-  return 0;
+  return stat;
 }
 
 
 void htmlPage(auto client) {
 
   // Check http requests
-  //if (httpRequest.indexOf("?b1") > 0)
-
-  if (SearchForRequest(httpRequest, "?b1")) {
+  if (httpRequest.indexOf("?b1")  > 0) {
     status1 = !status1;
   }
-  else if (SearchForRequest(httpRequest, "?b2")) {
+  else if (httpRequest.indexOf("?b2")  > 0) {
     status2 = !status2;
   }
-  else if (SearchForRequest(httpRequest, "?b3")) {
+  else if (httpRequest.indexOf("?b3")  > 0) {
     status3 = !status3;
   }
-  else if (SearchForRequest(httpRequest, "?b4")) {
+  else if (httpRequest.indexOf("?b4")  > 0) {
     status4 = !status4;
   }
 
   String htmlPage2 = "";
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
+    
+    /*
     // to be removed
     for (uint32_t i = 0; i < samplesNumber; i++) {
       plot[cnt][i] = random(2);  //random numbers from 0 to 1
     }
-
+    */
+    
     htmlPage2 += "<tr><td style=\"color: blue;\">";
     htmlPage2 += traceName[cnt];
     htmlPage2 += "</td><td style=\"color: purple;\">";
@@ -198,18 +203,11 @@ void webServer_thread() {
     while (client.connected()) {
       if (client.available()) {
         char c = client.read();
-        /*
-          Serial.write(c);
-          if (httpRequest.length() < REQUEST_BUFFER) {
+        //Serial.write(c);
+        if (httpRequest.length() < REQUEST_BUFFER) {
           httpRequest += c;
-          }
-        */
-
-        if (charCnt < (REQUEST_BUFFER - 1)) { //last element is 0 => null terminate string
-          httpRequest[charCnt] = c;           // store each HTTP request character in HTTP_requst array
-          charCnt++;
         }
-
+        
         // if you've gotten to the end of the line (received a newline
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
@@ -218,23 +216,22 @@ void webServer_thread() {
           htmlPage(client);
 
           // reset buffer
-          charCnt = 0;
-          for (int i = 0; i < REQUEST_BUFFER; i++) {
-            httpRequest[i] = 0;
-          }
+          httpRequest = "";
           break;
         }
         if (c == '\n') {
-          // you're starting a new line
+          // start new line
           currentLineIsBlank = true;
         } else if (c != '\r') {
-          // you've gotten a character on the current line
+          // character received on the current line
           currentLineIsBlank = false;
         }
       }
     }
+    
     // give the web browser time to receive the data
-    threads.delay(1);
+    delay(1);
+    
     // close the connection:
     client.stop();
     Serial.println("Client disconnected.");
