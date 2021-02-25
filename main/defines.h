@@ -3,7 +3,9 @@
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
+
 const uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
+
 
 const char html_1[] PROGMEM = R"rawliteral(
 <html>
@@ -21,6 +23,7 @@ const char html_1[] PROGMEM = R"rawliteral(
 // <body onload="window.open(location.href='/', _top);">
 
 
+// pin assignment
 const uint8_t  IECY =     0;
 const uint8_t ICalStp =   1;
 const uint8_t ICalStrt =  3;
@@ -63,8 +66,3 @@ const uint8_t StsLed5 =   38;
 const uint8_t StsLed4 =   39;
 const uint8_t StsLed3 =   40;
 const uint8_t StsLed2 =   41;
-
-
-const uint32_t samplesNumber = 150; // 2400m
-const uint8_t numTraces = 6;
-const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"HCH"}, {"ECY"}};

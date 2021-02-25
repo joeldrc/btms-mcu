@@ -20,19 +20,35 @@
 
 #include <ADC.h>
 #include <ADC_util.h>
-#include "src\TeensyThreads\TeensyThreads.h"
 
 
 // Global variables
+const uint32_t pulseTime = 1;         // time in uS
+const uint32_t psTimeCycle = 1200000; // time in uS
+
+const uint32_t scyTime = 0;           // time in uS
+const uint32_t calstartTime = 5000;   // time in uS
+const uint32_t calstopTime = 100000;  // time in uS
+const uint32_t injTime = 170000;      // time in uS
+const uint32_t hchTime = 400000;      // time in uS
+const uint32_t ecyTime = 805000;      // time in uS
+
+volatile bool checkTiming = true;
+
+// plot for webPage
+const uint32_t samplesNumber = 150; // 2400m
+const uint8_t numTraces = 5;
+const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"ECY"}};
+
 uint32_t traceTime[numTraces] = {0};
 
 
+// other webPage
 bool status1 = false;
 bool status2 = false;
 bool status3 = false;
 bool status4 = false;
 bool status5 = false;
-
 float v1 = 0;
 float v2 = 0;
 float v3 = 0;
@@ -40,7 +56,10 @@ float v4 = 0;
 
 
 // Timing
-elapsedMillis timing;   // Create elapsedMillis object
+elapsedMicros timing;           // Create elapsedMicros object
+
+// Timer object
+IntervalTimer simulatedTiming;
 
 
 // interrupt variables
@@ -50,7 +69,7 @@ volatile uint32_t calStop = 0;
 volatile uint32_t harmonicChange = 0;
 volatile uint32_t endOfCycle = 0;
 
-
+// interrupt functions
 FASTRUN void interrupt_ISCY() {
   timing = 0;
   startOfcycle = timing;
@@ -188,17 +207,34 @@ void setup() {
   Serial.begin(9600);
   Serial.println("BTMS mcu serial monitor");
 
-  // Start threads
-  threads.addThread(ctrlLedThread, 1);
-  threads.addThread(ctrlLoop, 1);
-  threads.addThread(ethernetConfig_thread, 1);
+  // Timer setup
+  simulatedTiming.priority(1);  // Set the interrupt priority level, controlling which other interrupts this timer is allowed to interrupt. Lower numbers are higher priority, with 0 the highest and 255 the lowest.
 }
 
 
 void loop() {
   // fast cycles
-  simulatedCycle();
+  static uint8_t simulatedMode = 1;
+
+  if (simulatedMode == 1) {
+    simulatedTiming.begin(simulatedCycle, 100000);  //The interval is specified in microseconds, which may be an integer or floating point number, for more highly precise timing.
+    //Serial.println("Timer start");
+    simulatedMode++;
+  }
+  else if (simulatedMode == 0) {
+    simulatedTiming.end();
+  }
+
   readCycle();
+
+  // slow cycle
+  if (checkTiming) {
+    ctrlLedThread();
+    ctrlLoop();
+    noInterrupts();
+    checkTiming = false;
+    interrupts();
+  }
 
   webServer_thread();
 }
