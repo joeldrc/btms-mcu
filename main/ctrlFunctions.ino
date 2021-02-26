@@ -1,12 +1,7 @@
 
 
+volatile uint32_t timerValue = 10000;
 volatile uint8_t cnt_cycle = 0;
-
-
-FASTRUN void readOnly() {
-  checkTiming = true;
-  cnt_cycle = 0;
-}
 
 
 FASTRUN void simulatedCycle1() {
@@ -31,13 +26,13 @@ FASTRUN void simulatedCycle1() {
       }
     // PSB cycle 1.2 sec
     default: {
-        checkTiming = true;
         cnt_cycle = 0;
       }
       break;
   }
   simulatedTiming.update(timerValue);
 }
+
 
 FASTRUN void simulatedCycle2() {
   switch (cnt_cycle) {
@@ -71,7 +66,6 @@ FASTRUN void simulatedCycle2() {
       }
     // PSB cycle 1.2 sec
     default: {
-        checkTiming = true;
         cnt_cycle = 0;
       }
       break;
@@ -142,35 +136,8 @@ FASTRUN void simulatedCycle3() {
       }
     // PSB cycle 1.2 sec
     default: {
-        checkTiming = true;
         cnt_cycle = 0;
       }
   }
   simulatedTiming.update(timerValue);
-}
-
-
-FASTRUN void readCycle() {
-  noInterrupts();
-  traceTime[0] = startOfcycle;
-  traceTime[1] = calStart;
-  traceTime[2] = calStop;
-  traceTime[3] = harmonicChange;
-  traceTime[4] = endOfCycle;
-  interrupts();
-}
-
-
-void ctrlLoop() {
-  static bool ledVal = false;
-  digitalWriteFast(StsLed1, ledVal);
-  digitalWriteFast(StsLedGr, ledVal);
-  ledVal = !ledVal;
-
-  if (ctrlConnection() != true) {
-    ethernetConfig_thread();
-  }
-  Serial.print("Setting switch: ");
-  Serial.print(readSettingSwitch());
-  Serial.println();
 }

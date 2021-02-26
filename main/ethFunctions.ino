@@ -4,9 +4,9 @@
 #include <fnet.h>
 #include "src\NativeEthernet\NativeEthernet.h"
 
+
 EthernetServer server(80);
 uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
-bool plot[numTraces][samplesNumber] = {0};
 
 
 const char asciiFilledSquare[] = "&#9608;"; //'█';
@@ -213,7 +213,7 @@ void htmlPage(auto client) {
 }
 
 
-void webServer_thread() {
+void handleWebServer() {
   // listen for incoming clients
   EthernetClient client = server.available();
   if (client) {

@@ -21,21 +21,28 @@
 #include <ADC.h>
 #include <ADC_util.h>
 
+#include <Bounce.h>
+#include "src\TeensyThreads\TeensyThreads.h"
+
+
+Bounce pushbutton1 = Bounce(SW6, 10);  // 10 ms debounce
+Bounce pushbutton2 = Bounce(SW5, 10);  // 10 ms debounce
+
 
 /*** Global variables **/
 // 0: read only
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
-uint8_t operationMode = 0;
+volatile int operationMode = 0;
 
 
 // plot for webPage
 const uint32_t samplesNumber = 150; // 2400m
 const uint8_t numTraces = 5;
 const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"ECY"}};
-
 uint32_t traceTime[numTraces] = {0};
+bool plot[numTraces][samplesNumber] = {0};
 
 
 // other webPage
@@ -59,18 +66,17 @@ IntervalTimer simulatedTiming;
 
 
 // Timer variables
-const uint32_t pulseTime = 1;                  // time in uS
-volatile const uint32_t psTimeCycle = 1200000; // time in uS
+const uint32_t pulseTime = 1;         // time in uS
 
-volatile const uint32_t scyTime = 0;           // time in uS
-volatile const uint32_t calstartTime = 5000;   // time in uS
-volatile const uint32_t calstopTime = 100000;  // time in uS
-volatile const uint32_t injTime = 170000;      // time in uS
-volatile const uint32_t hchTime = 400000;      // time in uS
-volatile const uint32_t ecyTime = 805000;      // time in uS
+// Timing for each cycle
+const uint32_t scyTime = 0;           // time in uS
+const uint32_t calstartTime = 5000;   // time in uS
+const uint32_t calstopTime = 100000;  // time in uS
+const uint32_t injTime = 170000;      // time in uS
+const uint32_t hchTime = 400000;      // time in uS
+const uint32_t ecyTime = 805000;      // time in uS
 
-volatile uint32_t timerValue = 10000;
-volatile bool checkTiming = true;
+const uint32_t psTimeCycle = 1200000; // time in uS
 
 
 // interrupt variables
@@ -99,13 +105,6 @@ FASTRUN void interrupt_IECY() {
   endOfCycle = timing;
 }
 
-FASTRUN void btn1() {
-  // insert code
-}
-FASTRUN void btn2() {
-  // insert code
-}
-
 
 uint8_t readSettingSwitch() {
   // Read the current four-bit
@@ -116,6 +115,95 @@ uint8_t readSettingSwitch() {
   if (digitalReadFast(SW2) == 0) b |= 4;
   if (digitalReadFast(SW1) == 0) b |= 8;
   return (b);
+}
+
+
+void ctrlEthernetThread() {
+  while (1) {
+    ctrlConnection();
+    ethernetConfig_thread();
+
+    threads.delay(4000);
+    threads.yield();
+  }
+}
+
+
+void displayLeds(int byt) {
+  int d = 0;
+  int binary[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  if (byt <= 255) {
+    while (byt > 0) {
+      binary[d] = byt % 2;
+      byt = byt / 2;
+      d++;
+    }
+    if (binary[0] == 1) digitalWrite(StsLed1, HIGH);
+    else digitalWrite(StsLed1, LOW);
+    if (binary[1] == 1) digitalWrite(StsLed2, HIGH);
+    else digitalWrite(StsLed2, LOW);
+    if (binary[2] == 1) digitalWrite(StsLed3, HIGH);
+    else digitalWrite(StsLed3, LOW);
+    if (binary[3] == 1) digitalWrite(StsLed4, HIGH);
+    else digitalWrite(StsLed4, LOW);
+    if (binary[4] == 1) digitalWrite(StsLed5, HIGH);
+    else digitalWrite(StsLed5, LOW);
+    if (binary[5] == 1) digitalWrite(StsLed6, HIGH);
+    else digitalWrite(StsLed6, LOW);
+    if (binary[6] == 1) digitalWrite(StsLed7, HIGH);
+    else digitalWrite(StsLed7, LOW);
+    if (binary[7] == 1) digitalWrite(StsLed8, HIGH);
+    else digitalWrite(StsLed8, LOW);
+  }
+}
+
+
+void heartBeatThread() {
+  while (1) {
+    // Set status leds
+    static bool ledVal = false;
+    digitalWriteFast(StsLedGr, ledVal);
+    digitalWriteFast(StsLedOr, !ledVal);
+    ledVal = !ledVal;
+
+    // Set front panel leds
+    static uint8_t val = 1;
+    switch (operationMode) {
+      case 0: {
+          if (val < 128) {
+            val = val << 1;
+          }
+          else {
+            val = 1;
+          }
+        }
+        break;
+
+      case 1: {
+          val = 0b00000011;
+        }
+        break;
+
+      case 2: {
+          val = 0b00000111;
+        }
+        break;
+
+      case 3: {
+          val = 0b00001111;
+        }
+        break;
+    }
+    displayLeds(val);
+
+    // Read hardware switch
+    Serial.print("Setting switch: ");
+    Serial.print(readSettingSwitch());
+    Serial.println();
+
+    threads.delay(500);
+    threads.yield();
+  }
 }
 
 
@@ -133,10 +221,6 @@ void setup() {
   pinMode(SW4, INPUT_PULLUP);
   pinMode(SW5, INPUT_PULLUP);
   pinMode(SW6, INPUT_PULLUP);
-
-  // Interrupts
-  attachInterrupt(SW5, btn1, FALLING);
-  //attachInterrupt(SW6, btn2, FALLING);
 
   // Outputs LED
   pinMode(StsLedOr, OUTPUT);
@@ -224,48 +308,41 @@ void setup() {
   // controlling which other interrupts this timer is allowed to interrupt.
   // Lower numbers are higher priority, with 0 the highest and 255 the lowest.
   simulatedTiming.priority(1);
+
+  // Start thread
+  threads.addThread(ctrlEthernetThread, 1);
+  threads.addThread(heartBeatThread, 1);
 }
 
 
 void loop() {
+  // operationMode selection
   static int previousSetting = -1;
-
-  // fast cycles
   if (previousSetting != operationMode) {
     switch (operationMode) {
-      case 0: {
-          simulatedTiming.begin(readOnly, psTimeCycle);
-          digitalWriteFast(StsLedOr, LOW);
-        }
-        break;
-
       case 1: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
           simulatedTiming.begin(simulatedCycle1, psTimeCycle);
-          digitalWriteFast(StsLedOr, HIGH);
         }
         break;
-
       case 2: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
           simulatedTiming.begin(simulatedCycle2, psTimeCycle);
-          digitalWriteFast(StsLedOr, HIGH);
         }
         break;
-
       case 3: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
           simulatedTiming.begin(simulatedCycle3, psTimeCycle);
-          digitalWriteFast(StsLedOr, HIGH);
         }
         break;
       default: {
+          simulatedTiming.end();
           operationMode = 0;
         }
         break;
@@ -275,19 +352,27 @@ void loop() {
     previousSetting = operationMode;
   }
 
-
   // read incoming timing on the interrupts
-  readCycle();
+  noInterrupts();
+  traceTime[0] = startOfcycle;
+  traceTime[1] = calStart;
+  traceTime[2] = calStop;
+  traceTime[3] = harmonicChange;
+  traceTime[4] = endOfCycle;
+  interrupts();
 
-
-  // slow cycle
-  if (checkTiming) {
-    ctrlLoop();
-
-    noInterrupts();
-    checkTiming = false;
-    interrupts();
+  // Check buttons
+  if (pushbutton1.update()) {
+    if (pushbutton1.fallingEdge()) {
+      operationMode++;
+    }
+  }
+  if (pushbutton2.update()) {
+    if (pushbutton2.fallingEdge()) {
+      operationMode--;
+    }
   }
 
-  webServer_thread();
+  // Handle webServer
+  handleWebServer();
 }
