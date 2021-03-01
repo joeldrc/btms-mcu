@@ -324,24 +324,26 @@ void loop() {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle1, psTimeCycle);
+          simulatedTiming.begin(simulatedCycle1, 1000);
         }
         break;
       case 2: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle2, psTimeCycle);
+          simulatedTiming.begin(simulatedCycle2, 1000);
         }
         break;
       case 3: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle3, psTimeCycle);
+          simulatedTiming.begin(simulatedCycle3, 1000);
         }
         break;
       default: {
+          digitalWriteFast(TEN, LOW); // inhibit external timings
+
           simulatedTiming.end();
           operationMode = 0;
         }
@@ -360,6 +362,18 @@ void loop() {
   traceTime[3] = harmonicChange;
   traceTime[4] = endOfCycle;
   interrupts();
+
+
+  // to continue coding
+  digitalReadFast(_10MHzDet);
+  digitalReadFast(D10MHz);
+  digitalReadFast(Lock);
+
+  analogRead(ADC10);
+  analogRead(ADC11);
+  analogRead(ADC12);
+  analogRead(ADC13);
+
 
   // Check buttons
   if (pushbutton1.update()) {

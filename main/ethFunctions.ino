@@ -98,42 +98,8 @@ void htmlPage(auto client) {
     //Serial.println(subString);
     operationMode = subString.toInt();
   }
+
   
-  String htmlPage2 = "";
-  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
-    
-    /*
-    // to be removed
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      plot[cnt][i] = random(2);  //random numbers from 0 to 1
-    }
-    */
-    
-    htmlPage2 += "<tr><td style=\"color: blue;\">";
-    htmlPage2 += traceName[cnt];
-    htmlPage2 += "</td><td style=\"color: purple;\">";
-    htmlPage2 += traceTime[cnt];
-    htmlPage2 += "</td><td style=\"color: black;\"><pre>";
-
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      if (plot[cnt][i]) {
-        htmlPage2 += asciiFilledSquare;
-      }
-      else {
-        htmlPage2 += asciiSpace;
-      }
-    }
-    htmlPage2 += "\n";
-
-    /*
-      for (uint32_t i = 0; i < samplesNumber; i++) {
-      htmlPage2 += plot[cnt][i];
-      }
-      htmlPage2 += "\n";
-    */
-    htmlPage2 += "</pre></td>";
-  }
-
   v1 = 0;
   v2 = 0;
 
@@ -200,7 +166,45 @@ void htmlPage(auto client) {
 
   htmlPage += "<br><br>";
   htmlPage += "<table><tr><th>Name</th><th> </th></tr>"; 
+
+
+  String htmlPage2 = "";
+  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
+    
+    /*
+    // to be removed
+    for (uint32_t i = 0; i < samplesNumber; i++) {
+      plot[cnt][i] = random(2);  //random numbers from 0 to 1
+    }
+    */
+    
+    htmlPage2 += "<tr><td style=\"color: blue;\">";
+    htmlPage2 += traceName[cnt];
+    htmlPage2 += "</td><td style=\"color: purple;\">";
+    htmlPage2 += traceTime[cnt];
+    htmlPage2 += "</td><td style=\"color: black;\"><pre>";
+
+    for (uint32_t i = 0; i < samplesNumber; i++) {
+      if (plot[cnt][i]) {
+        htmlPage2 += asciiFilledSquare;
+      }
+      else {
+        htmlPage2 += asciiSpace;
+      }
+    }
+    htmlPage2 += "\n";
+
+    /*
+      for (uint32_t i = 0; i < samplesNumber; i++) {
+      htmlPage2 += plot[cnt][i];
+      }
+      htmlPage2 += "\n";
+    */
+    htmlPage2 += "</pre></td>";
+  } 
   htmlPage += htmlPage2; 
+
+  
   htmlPage += "</tr></table></body>";
   htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
   htmlPage += "</html>";
