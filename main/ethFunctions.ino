@@ -99,11 +99,6 @@ void htmlPage(auto client) {
     operationMode = subString.toInt();
   }
 
-  
-  v1 = 0;
-  v2 = 0;
-
-
   // start html
   String htmlPage = "";
   htmlPage += "HTTP/1.1 200 OK";
@@ -163,6 +158,17 @@ void htmlPage(auto client) {
   htmlPage += v1;
   htmlPage += "<br/>V2 = ";
   htmlPage += v2;
+  htmlPage += "<br/>V3 = ";
+  htmlPage += v3;
+  htmlPage += "<br/>V4 = ";
+  htmlPage += v4;
+
+  htmlPage += "<br/><br/>DET10MHz = ";
+  htmlPage += det10Mhz;
+  htmlPage += "<br/>D10MHz = ";
+  htmlPage += d10MHz;
+  htmlPage += "<br/>LOCK = ";
+  htmlPage += lock;
 
   htmlPage += "<br><br>";
   htmlPage += "<table><tr><th>Name</th><th> </th></tr>"; 

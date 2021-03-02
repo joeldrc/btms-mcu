@@ -36,6 +36,10 @@ Bounce pushbutton2 = Bounce(SW5, 10);  // 10 ms debounce
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
 volatile int operationMode = 0;
 
+volatile bool det10Mhz = 0;
+volatile bool d10MHz = 0;
+volatile bool lock = 0;
+
 
 // plot for webPage
 const uint32_t samplesNumber = 150; // 2400m
@@ -162,8 +166,8 @@ void heartBeatThread() {
   while (1) {
     // Set status leds
     static bool ledVal = false;
-    digitalWriteFast(StsLedGr, ledVal);
-    digitalWriteFast(StsLedOr, !ledVal);
+    digitalWrite(StsLedGr, ledVal);
+    digitalWrite(StsLedOr, HIGH);
     ledVal = !ledVal;
 
     // Set front panel leds
@@ -201,6 +205,17 @@ void heartBeatThread() {
     Serial.print(readSettingSwitch());
     Serial.println();
 
+    // Read analog values
+    v1 = analogRead(ADC10);
+    v2 = analogRead(ADC11);
+    v3 = analogRead(ADC12);
+    v4 = analogRead(ADC13);
+
+    v1 = map(v1, 0, 4095, 0, 50);
+    v2 = map(v2, 0, 4095, -18.3, 0);
+    v3 = map(v3, 0, 4095, 0, 18.3);
+    v4 = map(v4, 0, 4095, 0, 8.3);
+
     threads.delay(500);
     threads.yield();
   }
@@ -235,16 +250,16 @@ void setup() {
   pinMode(StsLed8, OUTPUT);
 
   // Set LEDs off
-  digitalWriteFast(StsLedOr, LOW);
-  digitalWriteFast(StsLedGr, LOW);
-  digitalWriteFast(StsLed1, LOW);
-  digitalWriteFast(StsLed2, LOW);
-  digitalWriteFast(StsLed3, LOW);
-  digitalWriteFast(StsLed4, LOW);
-  digitalWriteFast(StsLed5, LOW);
-  digitalWriteFast(StsLed6, LOW);
-  digitalWriteFast(StsLed7, LOW);
-  digitalWriteFast(StsLed8, LOW);
+  digitalWrite(StsLedOr, LOW);
+  digitalWrite(StsLedGr, LOW);
+  digitalWrite(StsLed1, LOW);
+  digitalWrite(StsLed2, LOW);
+  digitalWrite(StsLed3, LOW);
+  digitalWrite(StsLed4, LOW);
+  digitalWrite(StsLed5, LOW);
+  digitalWrite(StsLed6, LOW);
+  digitalWrite(StsLed7, LOW);
+  digitalWrite(StsLed8, LOW);
 
   // Digital outputs
   pinMode(TEN, OUTPUT);
@@ -256,12 +271,14 @@ void setup() {
   pinMode(SECY, OUTPUT);
 
   digitalWriteFast(TEN, LOW);
-  digitalWriteFast(SSCY, LOW);
-  digitalWriteFast(SCalStrt, LOW);
-  digitalWriteFast(SCalStp, LOW);
-  digitalWriteFast(SINJ, LOW);
-  digitalWriteFast(SHCH, LOW);
-  digitalWriteFast(SECY, LOW);
+
+  // active low signals
+  digitalWriteFast(SSCY, HIGH);
+  digitalWriteFast(SCalStrt, HIGH);
+  digitalWriteFast(SCalStp, HIGH);
+  digitalWriteFast(SINJ, HIGH);
+  digitalWriteFast(SHCH, HIGH);
+  digitalWriteFast(SECY, HIGH);
 
   pinMode(BFrev1, OUTPUT);
   pinMode(BFrev2, OUTPUT);
@@ -312,6 +329,9 @@ void setup() {
   // Start thread
   threads.addThread(ctrlEthernetThread, 1);
   threads.addThread(heartBeatThread, 1);
+
+  // Analog setup
+  analogReadResolution(12); // set bits of resolution
 }
 
 
@@ -365,14 +385,9 @@ void loop() {
 
 
   // to continue coding
-  digitalReadFast(_10MHzDet);
-  digitalReadFast(D10MHz);
-  digitalReadFast(Lock);
-
-  analogRead(ADC10);
-  analogRead(ADC11);
-  analogRead(ADC12);
-  analogRead(ADC13);
+  det10Mhz = digitalReadFast(_10MHzDet);
+  d10MHz = digitalReadFast(D10MHz);
+  lock = digitalReadFast(Lock);
 
 
   // Check buttons
