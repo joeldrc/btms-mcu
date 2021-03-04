@@ -29,16 +29,21 @@ Bounce pushbutton1 = Bounce(SW6, 10);  // 10 ms debounce
 Bounce pushbutton2 = Bounce(SW5, 10);  // 10 ms debounce
 
 
+// chip temperature
+extern float tempmonGetTemp(void);
+
+
 /*** Global variables **/
 // 0: read only
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
 volatile int operationMode = 0;
-
+volatile bool boardStatus = 0;
 volatile bool det10Mhz = 0;
-volatile bool d10MHz = 0;
 volatile bool lock = 0;
+
+volatile float cpuTemp = 0;
 
 
 // plot for webPage
@@ -50,11 +55,6 @@ bool plot[numTraces][samplesNumber] = {0};
 
 
 // other webPage
-bool status1 = false;
-bool status2 = false;
-bool status3 = false;
-bool status4 = false;
-bool status5 = false;
 float v1 = 0;
 float v2 = 0;
 float v3 = 0;
@@ -205,6 +205,10 @@ void heartBeatThread() {
     Serial.print(readSettingSwitch());
     Serial.println();
 
+    // Read digital inputs
+    det10Mhz = digitalReadFast(_10MHzDet);
+    lock = digitalReadFast(Lock);
+
     // Read analog values
     v1 = analogRead(ADC10);
     v2 = analogRead(ADC11);
@@ -215,6 +219,9 @@ void heartBeatThread() {
     v2 = map(v2, 0, 4095, -18.3, 0);
     v3 = map(v3, 0, 4095, 0, 18.3);
     v4 = map(v4, 0, 4095, 0, 8.3);
+
+    // read CPU temperature
+    cpuTemp = tempmonGetTemp();
 
     threads.delay(500);
     threads.yield();
@@ -382,12 +389,6 @@ void loop() {
   traceTime[3] = harmonicChange;
   traceTime[4] = endOfCycle;
   interrupts();
-
-
-  // to continue coding
-  det10Mhz = digitalReadFast(_10MHzDet);
-  d10MHz = digitalReadFast(D10MHz);
-  lock = digitalReadFast(Lock);
 
 
   // Check buttons

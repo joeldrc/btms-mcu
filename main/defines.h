@@ -1,5 +1,8 @@
 
 
+const uint8_t BoardSN =   0;
+
+
 // pin assignment
 const uint8_t TEN =       8;
 
