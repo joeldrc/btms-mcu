@@ -29,12 +29,21 @@ Bounce pushbutton1 = Bounce(SW6, 10);  // 10 ms debounce
 Bounce pushbutton2 = Bounce(SW5, 10);  // 10 ms debounce
 
 
+// chip temperature
+extern float tempmonGetTemp(void);
+
+
 /*** Global variables **/
 // 0: read only
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
-volatile int operationMode = 0;
+volatile uint32_t operationMode = 0;
+volatile bool boardStatus = 0;
+volatile bool det10Mhz = 0;
+volatile bool lock = 0;
+
+volatile float cpuTemp = 0;
 
 
 // plot for webPage
@@ -46,11 +55,6 @@ bool plot[numTraces][samplesNumber] = {0};
 
 
 // other webPage
-bool status1 = false;
-bool status2 = false;
-bool status3 = false;
-bool status4 = false;
-bool status5 = false;
 float v1 = 0;
 float v2 = 0;
 float v3 = 0;
@@ -69,12 +73,12 @@ IntervalTimer simulatedTiming;
 const uint32_t pulseTime = 1;         // time in uS
 
 // Timing for each cycle
-const uint32_t scyTime = 0;           // time in uS
-const uint32_t calstartTime = 5000;   // time in uS
-const uint32_t calstopTime = 100000;  // time in uS
-const uint32_t injTime = 170000;      // time in uS
-const uint32_t hchTime = 400000;      // time in uS
-const uint32_t ecyTime = 805000;      // time in uS
+volatile uint32_t scyTime = 0;           // time in uS
+volatile uint32_t calstartTime = 5000;   // time in uS
+volatile uint32_t calstopTime = 100000;  // time in uS
+volatile uint32_t injTime = 170000;      // time in uS
+volatile uint32_t hchTime = 400000;      // time in uS
+volatile uint32_t ecyTime = 805000;      // time in uS
 
 const uint32_t psTimeCycle = 1200000; // time in uS
 
@@ -162,8 +166,8 @@ void heartBeatThread() {
   while (1) {
     // Set status leds
     static bool ledVal = false;
-    digitalWriteFast(StsLedGr, ledVal);
-    digitalWriteFast(StsLedOr, !ledVal);
+    digitalWrite(StsLedGr, ledVal);
+    digitalWrite(StsLedOr, HIGH);
     ledVal = !ledVal;
 
     // Set front panel leds
@@ -201,6 +205,24 @@ void heartBeatThread() {
     Serial.print(readSettingSwitch());
     Serial.println();
 
+    // Read digital inputs
+    det10Mhz = digitalReadFast(_10MHzDet);
+    lock = digitalReadFast(Lock);
+
+    // Read analog values
+    v1 = analogRead(ADC10);
+    v2 = analogRead(ADC11);
+    v3 = analogRead(ADC12);
+    v4 = analogRead(ADC13);
+
+    v1 = map(v1, 0, 4095, 0, 50);
+    v2 = map(v2, 0, 4095, -21.6, 0);
+    v3 = map(v3, 0, 4095, 0, 18.3);
+    v4 = map(v4, 0, 4095, 0, 8.3);
+
+    // read CPU temperature
+    cpuTemp = tempmonGetTemp();
+
     threads.delay(500);
     threads.yield();
   }
@@ -235,16 +257,16 @@ void setup() {
   pinMode(StsLed8, OUTPUT);
 
   // Set LEDs off
-  digitalWriteFast(StsLedOr, LOW);
-  digitalWriteFast(StsLedGr, LOW);
-  digitalWriteFast(StsLed1, LOW);
-  digitalWriteFast(StsLed2, LOW);
-  digitalWriteFast(StsLed3, LOW);
-  digitalWriteFast(StsLed4, LOW);
-  digitalWriteFast(StsLed5, LOW);
-  digitalWriteFast(StsLed6, LOW);
-  digitalWriteFast(StsLed7, LOW);
-  digitalWriteFast(StsLed8, LOW);
+  digitalWrite(StsLedOr, LOW);
+  digitalWrite(StsLedGr, LOW);
+  digitalWrite(StsLed1, LOW);
+  digitalWrite(StsLed2, LOW);
+  digitalWrite(StsLed3, LOW);
+  digitalWrite(StsLed4, LOW);
+  digitalWrite(StsLed5, LOW);
+  digitalWrite(StsLed6, LOW);
+  digitalWrite(StsLed7, LOW);
+  digitalWrite(StsLed8, LOW);
 
   // Digital outputs
   pinMode(TEN, OUTPUT);
@@ -256,12 +278,14 @@ void setup() {
   pinMode(SECY, OUTPUT);
 
   digitalWriteFast(TEN, LOW);
-  digitalWriteFast(SSCY, LOW);
-  digitalWriteFast(SCalStrt, LOW);
-  digitalWriteFast(SCalStp, LOW);
-  digitalWriteFast(SINJ, LOW);
-  digitalWriteFast(SHCH, LOW);
-  digitalWriteFast(SECY, LOW);
+
+  // active low signals
+  digitalWriteFast(SSCY, HIGH);
+  digitalWriteFast(SCalStrt, HIGH);
+  digitalWriteFast(SCalStp, HIGH);
+  digitalWriteFast(SINJ, HIGH);
+  digitalWriteFast(SHCH, HIGH);
+  digitalWriteFast(SECY, HIGH);
 
   pinMode(BFrev1, OUTPUT);
   pinMode(BFrev2, OUTPUT);
@@ -312,36 +336,41 @@ void setup() {
   // Start thread
   threads.addThread(ctrlEthernetThread, 1);
   threads.addThread(heartBeatThread, 1);
+
+  // Analog setup
+  analogReadResolution(12); // set bits of resolution
 }
 
 
 void loop() {
   // operationMode selection
-  static int previousSetting = -1;
+  static int previousSetting = 255;
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 1: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle1, psTimeCycle);
+          simulatedTiming.begin(simulatedCycle1, 1000);
         }
         break;
       case 2: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle2, psTimeCycle);
+          simulatedTiming.begin(simulatedCycle2, 1000);
         }
         break;
       case 3: {
           // The interval is specified in microseconds,
           // which may be an integer or floating point number,
           // for more highly precise timing.
-          simulatedTiming.begin(simulatedCycle3, psTimeCycle);
+          simulatedTiming.begin(simulatedCycle3, 1000);
         }
         break;
       default: {
+          digitalWriteFast(TEN, LOW); // inhibit external timings
+
           simulatedTiming.end();
           operationMode = 0;
         }
@@ -360,6 +389,7 @@ void loop() {
   traceTime[3] = harmonicChange;
   traceTime[4] = endOfCycle;
   interrupts();
+
 
   // Check buttons
   if (pushbutton1.update()) {

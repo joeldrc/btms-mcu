@@ -8,9 +8,11 @@ FASTRUN void simulatedCycle1() {
   switch (cnt_cycle) {
     // SCY
     case 0: {
-        digitalWriteFast(SSCY, HIGH);
-        delayMicroseconds(pulseTime);
+        digitalWriteFast(TEN, HIGH);
+
         digitalWriteFast(SSCY, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SSCY, HIGH);
 
         timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
         cnt_cycle++;
@@ -18,9 +20,9 @@ FASTRUN void simulatedCycle1() {
       break;
     // ECY
     case 1: {
-        digitalWriteFast(SECY, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SECY, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SECY, HIGH);
 
         timerValue = ecyTime - scyTime; //time duration of the next cycle
       }
@@ -38,9 +40,11 @@ FASTRUN void simulatedCycle2() {
   switch (cnt_cycle) {
     // SCY
     case 0: {
-        digitalWriteFast(SSCY, HIGH);
-        delayMicroseconds(pulseTime);
+        digitalWriteFast(TEN, HIGH);
+
         digitalWriteFast(SSCY, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SSCY, HIGH);
 
         timerValue = ecyTime - injTime; //time duration of the next cycle
         cnt_cycle++;
@@ -48,9 +52,9 @@ FASTRUN void simulatedCycle2() {
       break;
     // INJ
     case 1: {
-        digitalWriteFast(SINJ, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SINJ, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SINJ, HIGH);
 
         timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
         cnt_cycle++;
@@ -58,9 +62,9 @@ FASTRUN void simulatedCycle2() {
       break;
     // ECY
     case 2: {
-        digitalWriteFast(SECY, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SECY, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SECY, HIGH);
 
         timerValue = injTime - scyTime; //time duration of the next cycle
       }
@@ -78,9 +82,11 @@ FASTRUN void simulatedCycle3() {
   switch (cnt_cycle) {
     // SCY
     case 0: {
-        digitalWriteFast(SSCY, HIGH);
-        delayMicroseconds(pulseTime);
+        digitalWriteFast(TEN, HIGH);
+
         digitalWriteFast(SSCY, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SSCY, HIGH);
 
         timerValue = calstopTime - calstartTime; // time duration of the next cycle
         cnt_cycle++;
@@ -88,9 +94,9 @@ FASTRUN void simulatedCycle3() {
       break;
     // CALSTART
     case 1: {
-        digitalWriteFast(SCalStrt, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SCalStrt, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SCalStrt, HIGH);
 
         timerValue = injTime - calstopTime; // time duration of the next cycle
         cnt_cycle++;
@@ -98,9 +104,9 @@ FASTRUN void simulatedCycle3() {
       break;
     // CALSTOP
     case 2: {
-        digitalWriteFast(SCalStp, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SCalStp, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SCalStp, HIGH);
 
         timerValue = hchTime - injTime; // time duration of the next cycle
         cnt_cycle++;
@@ -108,9 +114,9 @@ FASTRUN void simulatedCycle3() {
       break;
     // INJ
     case 3: {
-        digitalWriteFast(SINJ, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SINJ, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SINJ, HIGH);
 
         timerValue = ecyTime - hchTime; // time duration of the next cycle
         cnt_cycle++;
@@ -118,9 +124,9 @@ FASTRUN void simulatedCycle3() {
       break;
     // HCH
     case 4: {
-        digitalWriteFast(SHCH, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SHCH, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SHCH, HIGH);
 
         timerValue = psTimeCycle - ecyTime; // time duration of the next cycle
         cnt_cycle++;
@@ -128,9 +134,9 @@ FASTRUN void simulatedCycle3() {
       break;
     // ECY
     case 5: {
-        digitalWriteFast(SECY, HIGH);
-        delayMicroseconds(pulseTime);
         digitalWriteFast(SECY, LOW);
+        delayMicroseconds(pulseTime);
+        digitalWriteFast(SECY, HIGH);
 
         timerValue = calstartTime - scyTime; // time duration of the next cycle
       }

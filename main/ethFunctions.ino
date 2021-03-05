@@ -12,25 +12,10 @@ uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
-const char html_1[] PROGMEM = R"rawliteral(
-<html>
-<head>
-<title>BTMS timing</title>
-<meta charset="utf-8">
-</head>
-<body>
-<h1>BTMS timing</h1>
-<p><input type="button" value="Log Out" onclick ="location.href='/?logout'"></p>
-<hr style="color: blue;">
-<p><b>CONTROL PANEL</b></p>
-)rawliteral";
-// <meta charset="utf-8" http-equiv="refresh" content="1; url=/">
-// <body onload="window.open(location.href='/', _top);">
-
 
 // size of buffer to store HTTP requests
 const uint8_t REQUEST_BUFFER = 100;
-String httpRequest= ""; // HTTP request string
+String httpRequest = ""; // HTTP request string
 
 
 void ethernetConfig_thread() {
@@ -55,7 +40,7 @@ void ethernetConfig_thread() {
 
 int ctrlConnection() {
   auto link = Ethernet.linkStatus();
-  
+
   Serial.print("Link status: ");
   switch (link) {
     case LinkON:
@@ -70,73 +55,174 @@ int ctrlConnection() {
       Serial.println("not connected.");
       return 0;
       break;
-    default:{
-      return -2;
-    }
+    default: {
+        return -2;
+      }
   }
+}
+
+
+const char html_1[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+<title>BTMS CPU</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+  box-sizing: border-box;
+}
+</style>
+<script>
+function addOptionsFunction() {
+  var x = document.getElementById("timingPanel");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+  } else {
+    x.style.display = "none";
+  }
+}
+</script>
+</head>
+<body style="font-family:Verdana;color: DarkSlateGray;">
+)rawliteral";
+
+
+String setupTiming(){
+  String htm = "<form action=\"/\">";
+  htm += "<br><input type=\"checkbox\" onclick=\"addOptionsFunction()\" name=\"advancedSettings\">Advanced settings</p>";
+  htm += "<div style=\"text-align:left;display: none;\" id=\"timingPanel\"><h3>SETUP TIMING</h3>";
+
+  htm += "<label for=\"quantity\">calstartTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val1\" min=\"1\" max=\"1200000\" value=\"";
+  htm += calstartTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">calstopTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val2\" min=\"1\" max=\"1200000\" value=\"";
+  htm += calstopTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">injTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val3\" min=\"1\" max=\"1200000\" value=\"";
+  htm += injTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">hchTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val4\" min=\"1\" max=\"1200000\" value=\"";
+  htm += hchTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">ecyTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val5\" min=\"1\" max=\"1200000\" value=\"";
+  htm += ecyTime;
+  htm += "\"><br>";
+  
+  htm += "<br><input type=\"submit\" value=\"Save\"></form></div>";
+  return htm;
+}
+
+
+String opModeOption(int mode){
+  String htm = "<form action=/><label for=\"opMode\"><b>Operation mode: ";
+  htm += mode;
+  htm += "</b><br><br></label>";
+  htm += "<select name=\"opMode\" id=\"opMode\"><optgroup label=\"Read only\">";
+  
+  if (mode==0) htm += "<option value=\"0\" selected>0. READ TIMING</option>";
+  else htm += "<option value=\"0\">0. READ TIMING</option>";
+  
+  htm += "</optgroup><optgroup label=\"Simulated\">";
+
+  if (mode==1) htm += "<option value=\"1\" selected>1. Simulate SCY and ECY</option>";
+  else htm += "<option value=\"1\">1. Simulate SCY and ECY</option>";
+
+  if (mode==2) htm += "<option value=\"2\" selected>2. Simulate SCY, INJ and ECY</option>";
+  else htm += "<option value=\"2\">2. Simulate SCY, INJ and ECY</option>";
+
+  if (mode==3) htm += "<option value=\"3\" selected>3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
+  else htm += "<option value=\"3\">3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
+
+  htm += "</optgroup></select><button type=”submit”>Change</button></form>";  
+  return htm;
+}
+
+
+const char html_10[] PROGMEM = R"rawliteral(
+<p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
+<p>CERN JD 2021.V1.0</p>
+</body>
+</html> 
+)rawliteral";
+
+
+String h1_title(int val){
+  String htm = "<div style=\"background-color:LightBlue;padding:15px;text-align:center;\"><h1>BTMS CPU #";
+  htm += val;
+  htm += "</h1></div>";
+  return htm;
+}
+
+
+String showInfo(String color, String title){
+  String htm = "<p><svg width=\"14\" height=\"14\"><circle cx=\"7\" cy=\"7\" r=\"8\" fill=\"";
+  htm += color;
+  htm += "\"/> Your browser does not support inline SVG. </svg><b> ";
+  htm += title;
+  htm += "</b></p>";
+  return htm;
+}
+
+
+String h2_title(String title){
+  String htm = "<br><div style=\"text-align:left;\"><h2>";
+  htm += title;
+  htm += "</h2></div><hr>";
+  return htm;
+}
+
+
+uint32_t httpFilterString(String httpRqst, String request){
+  int posVal = httpRqst.indexOf('=', httpRqst.indexOf(request));
+  int endNumber = httpRqst.indexOf(' ', posVal + 1);
+  //Serial.println(httpRqst);
+  String subString = httpRequest.substring(posVal + 1, endNumber);
+  Serial.println(subString.toInt());
+  return subString.toInt();  
 }
 
 
 void htmlPage(auto client) {
 
-  // Check http requests
-  if (httpRequest.indexOf("?b1")  > 0) {
-    status1 = !status1;
-  }
-  else if (httpRequest.indexOf("?b2")  > 0) {
-    status2 = !status2;
-  }
-  else if (httpRequest.indexOf("?b3")  > 0) {
-    status3 = !status3;
-  }
-  else if (httpRequest.indexOf("?b4")  > 0) {
-    status4 = !status4;
-  }
-  else if (httpRequest.indexOf("?opMode")  > 0) {
-    int posVal = httpRequest.indexOf("?opMode");
-    String subString = httpRequest.substring(posVal + 8, posVal + 9);
-    //Serial.println(subString);
-    operationMode = subString.toInt();
-  }
+  uint32_t tempVal = 0;
   
-  String htmlPage2 = "";
-  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
-    
-    /*
-    // to be removed
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      plot[cnt][i] = random(2);  //random numbers from 0 to 1
-    }
-    */
-    
-    htmlPage2 += "<tr><td style=\"color: blue;\">";
-    htmlPage2 += traceName[cnt];
-    htmlPage2 += "</td><td style=\"color: purple;\">";
-    htmlPage2 += traceTime[cnt];
-    htmlPage2 += "</td><td style=\"color: black;\"><pre>";
-
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      if (plot[cnt][i]) {
-        htmlPage2 += asciiFilledSquare;
-      }
-      else {
-        htmlPage2 += asciiSpace;
-      }
-    }
-    htmlPage2 += "\n";
-
-    /*
-      for (uint32_t i = 0; i < samplesNumber; i++) {
-      htmlPage2 += plot[cnt][i];
-      }
-      htmlPage2 += "\n";
-    */
-    htmlPage2 += "</pre></td>";
+  if (httpRequest.indexOf("opMode=")  > 0) {
+    operationMode = httpFilterString(httpRequest, "opMode=");
   }
 
-  v1 = 0;
-  v2 = 0;
-
+  if (httpRequest.indexOf("advancedSettings=on") > 0){  
+    if (httpRequest.indexOf("val1=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val1=");
+      noInterrupts();
+      calstartTime = tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val2=")  > 0) {    
+      tempVal = httpFilterString(httpRequest, "val2=");
+      noInterrupts();
+      calstopTime =  tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val3=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val3=");
+      noInterrupts();
+      injTime = tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val4=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val4=");
+      noInterrupts();
+      hchTime = tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val5=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val5=");
+      noInterrupts();
+      ecyTime = tempVal;
+      interrupts();
+    }
+  }
 
   // start html
   String htmlPage = "";
@@ -147,69 +233,69 @@ void htmlPage(auto client) {
   htmlPage += "Connection: close";
   htmlPage += "\n";
 
-  htmlPage +=  html_1;
+  htmlPage += html_1;
+
+  htmlPage += h1_title(BoardSN);
+
+  htmlPage += h2_title("CONTROL PANEL");
+  if (boardStatus == 0) htmlPage += showInfo("LawnGreen", "Board Status");
+  else htmlPage += showInfo("Red", "Board Status");
   
-  htmlPage += "<form action=/>";
-  htmlPage += "Operation mode: ";
-  htmlPage += operationMode;
-  htmlPage += " ";
-  htmlPage += "<select name=\"opMode\" id=\"opMode\"><option value=\"0\">0</option><option value=\"1\">1</option><option value=\"2\">2</option><option value=\"3\">3</option></select>";
-  htmlPage += "<button type=”submit”>Submit</button>";  
-  htmlPage += "</button></form>";
-
-  htmlPage += "<table>";
-  htmlPage += "<tr><th>Name</th><th>Switch</th><th>Status</th></tr>";
-  htmlPage += "<tr><td>Switch1</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b1'\"></td><td";
-  if (status1){
-    htmlPage += " bgcolor=\"lime\"";
-  }
-  htmlPage += ">";
-  htmlPage += status1;
-  htmlPage += "</td></tr>";
-
-  htmlPage += "<tr><td>Switch2</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b2'\"></td><td";
-  if (status2){
-    htmlPage += " bgcolor=\"lime\"";
-  }
-  htmlPage += ">";
-  htmlPage += status2;
-  htmlPage += "</td></tr>";
-
-  htmlPage += "<tr><td>Switch3</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b3'\"></td><td";
-  if (status3){
-    htmlPage += " bgcolor=\"lime\"";
-  }
-  htmlPage += ">";
-  htmlPage += status3;
-  htmlPage += "</td></tr>";
-
-  htmlPage += "<tr><td>Switch4</td><td><input type=\"button\" value=\"ON / OFF\" onclick=\"location.href='/?b4'\"></td><td";
-  if (status4){
-    htmlPage += " bgcolor=\"lime\"";
-  }
-  htmlPage += ">";
-  htmlPage += status4;
-  htmlPage += "</td></tr>";
-  htmlPage += "</table><br/>";
-
-  htmlPage += "<p><b>Analog read</b><br/></p>";
-  htmlPage += "V1 = ";
-  htmlPage += v1;
-  htmlPage += "<br/>V2 = ";
-  htmlPage += v2;
-
-  htmlPage += "<br><br>";
-  htmlPage += "<table><tr><th>Name</th><th> </th></tr>"; 
-  htmlPage += htmlPage2; 
-  htmlPage += "</tr></table></body>";
-  htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
-  htmlPage += "</html>";
-
-  // send html page
-  client.println(htmlPage);
+  if (det10Mhz == 1) htmlPage += showInfo("LawnGreen", "DET10MHz");
+  else htmlPage += showInfo("LightGray", "DET10MHz");
   
-  // close client connection
-  client.close();
+  if (lock == 0) htmlPage += showInfo("LawnGreen", "LOCK");
+  else htmlPage += showInfo("LightGray", "LOCK");
+
+  htmlPage += showInfo("LightGray", "CPU T: " + String(cpuTemp) + " &#176;C");
+  htmlPage += showInfo("LightGray", "BOX T: " + String(v1) + " &#176;C");
+  htmlPage += showInfo("LightGray", "V2: " + String(v2) + " V");
+  htmlPage += showInfo("LightGray", "V3: " + String(v3) + " V");
+  htmlPage += showInfo("LightGray", "V4: " + String(v4) + " V");
+
+  
+  htmlPage += h2_title("SETTINGS");
+  htmlPage += opModeOption(operationMode);
+  htmlPage += setupTiming();
+
+
+  htmlPage += h2_title("PLOTS");
+  String html_2 = "<table>";
+  html_2 += "<tr><th>Name</th><th>t [uS]</th><th>Value</th></tr>"; 
+  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
+    html_2 += "<tr><td>";
+    html_2 += traceName[cnt];
+    html_2 += "</td><td>";
+    html_2 += traceTime[cnt];
+    html_2 += "</td><td><pre>";  
+    for (uint32_t i = 0; i < samplesNumber; i++) {
+      if (plot[cnt][i]) {
+        html_2 += asciiFilledSquare;
+      }
+      else {
+        html_2 += asciiSpace;
+      }
+    }
+    html_2 += "\n";  
+    /*
+      for (uint32_t i = 0; i < samplesNumber; i++) {
+      htmlPage2 += plot[cnt][i];
+      }
+      htmlPage2 += "\n";
+    */
+    html_2 += "</pre></td></tr>";
+  }
+  html_2 += "</table>";
+
+
+  htmlPage += html_2; 
+  htmlPage += html_10;
+
+// send html page
+client.println(htmlPage);
+
+// close client connection
+client.close();
 }
 
 
@@ -228,7 +314,7 @@ void handleWebServer() {
         if (httpRequest.length() < REQUEST_BUFFER) {
           httpRequest += c;
         }
-        
+
         // if you've gotten to the end of the line (received a newline
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
@@ -249,10 +335,10 @@ void handleWebServer() {
         }
       }
     }
-    
+
     // give the web browser time to receive the data
     delay(1);
-    
+
     // close the connection:
     client.stop();
     Serial.println("Client disconnected.");
