@@ -38,7 +38,7 @@ extern float tempmonGetTemp(void);
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
-volatile int operationMode = 0;
+volatile uint32_t operationMode = 0;
 volatile bool boardStatus = 0;
 volatile bool det10Mhz = 0;
 volatile bool lock = 0;
@@ -73,12 +73,12 @@ IntervalTimer simulatedTiming;
 const uint32_t pulseTime = 1;         // time in uS
 
 // Timing for each cycle
-const uint32_t scyTime = 0;           // time in uS
-const uint32_t calstartTime = 5000;   // time in uS
-const uint32_t calstopTime = 100000;  // time in uS
-const uint32_t injTime = 170000;      // time in uS
-const uint32_t hchTime = 400000;      // time in uS
-const uint32_t ecyTime = 805000;      // time in uS
+volatile uint32_t scyTime = 0;           // time in uS
+volatile uint32_t calstartTime = 5000;   // time in uS
+volatile uint32_t calstopTime = 100000;  // time in uS
+volatile uint32_t injTime = 170000;      // time in uS
+volatile uint32_t hchTime = 400000;      // time in uS
+volatile uint32_t ecyTime = 805000;      // time in uS
 
 const uint32_t psTimeCycle = 1200000; // time in uS
 
@@ -216,7 +216,7 @@ void heartBeatThread() {
     v4 = analogRead(ADC13);
 
     v1 = map(v1, 0, 4095, 0, 50);
-    v2 = map(v2, 0, 4095, -18.3, 0);
+    v2 = map(v2, 0, 4095, -21.6, 0);
     v3 = map(v3, 0, 4095, 0, 18.3);
     v4 = map(v4, 0, 4095, 0, 8.3);
 
@@ -344,7 +344,7 @@ void setup() {
 
 void loop() {
   // operationMode selection
-  static int previousSetting = -1;
+  static int previousSetting = 255;
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 1: {

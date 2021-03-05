@@ -88,36 +88,30 @@ function addOptionsFunction() {
 )rawliteral";
 
 
-const char setupTiming[] PROGMEM = R"rawliteral(
-<br>
-<input type="checkbox" onclick="addOptionsFunction()"> Advanced settings</p>
+String setupTiming(){
+  String htm = "<form action=\"/\">";
+  htm += "<br><input type=\"checkbox\" onclick=\"addOptionsFunction()\" name=\"advancedSettings\">Advanced settings</p>";
+  htm += "<div style=\"text-align:left;display: none;\" id=\"timingPanel\"><h3>SETUP TIMING</h3>";
 
-<div style="text-align:left;display: none;" id="timingPanel">
-  <h3>SETUP TIMING</h3>
-
-<form action="/">
-  <label for="quantity">Quantity (between 1 and 5):</label>
-  <input type="number" id="quantity" name="quantity" min="1" max="5">
-  <br>
+  htm += "<label for=\"quantity\">calstartTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val1\" min=\"1\" max=\"1200000\" value=\"";
+  htm += calstartTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">calstopTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val2\" min=\"1\" max=\"1200000\" value=\"";
+  htm += calstopTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">injTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val3\" min=\"1\" max=\"1200000\" value=\"";
+  htm += injTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">hchTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val4\" min=\"1\" max=\"1200000\" value=\"";
+  htm += hchTime;
+  htm += "\"><br>";
+  htm += "<label for=\"quantity\">ecyTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val5\" min=\"1\" max=\"1200000\" value=\"";
+  htm += ecyTime;
+  htm += "\"><br>";
   
-  <label for="quantity">Quantity (between 1 and 5):</label>
-  <input type="number" id="quantity" name="quantity" min="1" max="5">
-  <br>
-  
-  <label for="quantity">Quantity (between 1 and 5):</label>
-  <input type="number" id="quantity" name="quantity" min="1" max="5">
-  <br>
-
-  <label for="quantity">Quantity (between 1 and 5):</label>
-  <input type="number" id="quantity" name="quantity" min="1" max="5">
-  <br>
-  <br>
-
-  <input type="submit" value="Save">
-  <input type="submit" value="Reset">
-</form>
-</div>
-)rawliteral";
+  htm += "<br><input type=\"submit\" value=\"Save\"></form></div>";
+  return htm;
+}
 
 
 String opModeOption(int mode){
@@ -179,13 +173,55 @@ String h2_title(String title){
 }
 
 
+uint32_t httpFilterString(String httpRqst, String request){
+  int posVal = httpRqst.indexOf('=', httpRqst.indexOf(request));
+  int endNumber = httpRqst.indexOf(' ', posVal + 1);
+  //Serial.println(httpRqst);
+  String subString = httpRequest.substring(posVal + 1, endNumber);
+  Serial.println(subString.toInt());
+  return subString.toInt();  
+}
+
+
 void htmlPage(auto client) {
+
+  uint32_t tempVal = 0;
   
-  if (httpRequest.indexOf("?opMode")  > 0) {
-    int posVal = httpRequest.indexOf("?opMode");
-    String subString = httpRequest.substring(posVal + 8, posVal + 9);
-    //Serial.println(subString);
-    operationMode = subString.toInt();
+  if (httpRequest.indexOf("opMode=")  > 0) {
+    operationMode = httpFilterString(httpRequest, "opMode=");
+  }
+
+  if (httpRequest.indexOf("advancedSettings=on") > 0){  
+    if (httpRequest.indexOf("val1=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val1=");
+      noInterrupts();
+      calstartTime = tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val2=")  > 0) {    
+      tempVal = httpFilterString(httpRequest, "val2=");
+      noInterrupts();
+      calstopTime =  tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val3=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val3=");
+      noInterrupts();
+      injTime = tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val4=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val4=");
+      noInterrupts();
+      hchTime = tempVal;
+      interrupts();
+    }
+    if (httpRequest.indexOf("val5=")  > 0) {
+      tempVal = httpFilterString(httpRequest, "val5=");
+      noInterrupts();
+      ecyTime = tempVal;
+      interrupts();
+    }
   }
 
   // start html
@@ -220,7 +256,8 @@ void htmlPage(auto client) {
   
   htmlPage += h2_title("SETTINGS");
   htmlPage += opModeOption(operationMode);
-  htmlPage += setupTiming;
+  htmlPage += setupTiming();
+
 
   htmlPage += h2_title("PLOTS");
   String html_2 = "<table>";
