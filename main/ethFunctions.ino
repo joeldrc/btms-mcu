@@ -72,6 +72,11 @@ const char html_1[] PROGMEM = R"rawliteral(
 * {
   box-sizing: border-box;
 }
+footer {
+  text-align: center;
+  padding: 3px;
+  background-color: LightBlue;
+}
 </style>
 <script>
 function addOptionsFunction() {
@@ -142,7 +147,10 @@ String opModeOption(int mode){
 
 const char html_10[] PROGMEM = R"rawliteral(
 <p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
-<p>CERN JD 2021.V1.0</p>
+<br>
+<footer>
+  <p><a style="color: DarkSlateGray;" href="mailto:hege@example.com">joel.daricou@cern.ch</a><br><br><b>Version: 2021.01.V.1.0</b></p>
+</footer>
 </body>
 </html> 
 )rawliteral";
