@@ -149,7 +149,7 @@ const char html_10[] PROGMEM = R"rawliteral(
 <p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
 <br>
 <footer>
-  <p><a style="color: DarkSlateGray;" href="mailto:hege@example.com">joel.daricou@cern.ch</a><br><br><b>Version: 2021.01.V.1.0</b></p>
+  <p><b>Version: 2021.01.V.1.0</b><br><br><a style="color: DarkSlateGray;" href="mailto:joel.daricou@cern.ch">joel.daricou@cern.ch</a></p>
 </footer>
 </body>
 </html> 
