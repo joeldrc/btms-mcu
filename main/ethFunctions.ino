@@ -89,27 +89,28 @@ function addOptionsFunction() {
 
 
 String setupTiming(){
-  String htm = "<form action=\"/\">";
-  htm += "<br><input type=\"checkbox\" onclick=\"addOptionsFunction()\" name=\"advancedSettings\">Advanced settings</p>";
+  String htm = "<br><input type=\"checkbox\" onclick=\"addOptionsFunction()\" name=\"advancedSettings\">Advanced settings</p>";
   htm += "<div style=\"text-align:left;display: none;\" id=\"timingPanel\"><h3>SETUP TIMING</h3>";
+  htm += "<form action=\"/\"><table>";
 
-  htm += "<label for=\"quantity\">calstartTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val1\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "<tr><td>calstartTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val1\" min=\"1\" max=\"1200000\" value=\"";
   htm += calstartTime;
-  htm += "\"><br>";
-  htm += "<label for=\"quantity\">calstopTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val2\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "\"></td></tr>";
+  htm += "<tr><td>calstopTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val2\" min=\"1\" max=\"1200000\" value=\"";
   htm += calstopTime;
-  htm += "\"><br>";
-  htm += "<label for=\"quantity\">injTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val3\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "\"></td></tr>";
+  htm += "<tr><td>injTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val3\" min=\"1\" max=\"1200000\" value=\"";
   htm += injTime;
-  htm += "\"><br>";
-  htm += "<label for=\"quantity\">hchTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val4\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "\"></td></tr>";
+  htm += "<tr><td>hchTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val4\" min=\"1\" max=\"1200000\" value=\"";
   htm += hchTime;
-  htm += "\"><br>";
-  htm += "<label for=\"quantity\">ecyTime (Value in uS):</label><input type=\"number\" id=\"quantity\" name=\"val5\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "\"></td></tr>";
+  htm += "<tr><td>ecyTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val5\" min=\"1\" max=\"1200000\" value=\"";
   htm += ecyTime;
-  htm += "\"><br>";
+  htm += "\"></td></tr>";
   
-  htm += "<br><input type=\"submit\" value=\"Save\"></form></div>";
+  htm += "</table><br><input type=\"submit\" value=\"Save\"></form>";
+  htm += "<input type=\"submit\" value=\"Reset\" onclick=\"location.href='/?reset='\"></div>";
   return htm;
 }
 
@@ -134,7 +135,7 @@ String opModeOption(int mode){
   if (mode==3) htm += "<option value=\"3\" selected>3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
   else htm += "<option value=\"3\">3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
 
-  htm += "</optgroup></select><button type=”submit”>Change</button></form>";  
+  htm += "</optgroup></select><button type=”submit”>Change</button></form>"; 
   return htm;
 }
 
@@ -173,6 +174,17 @@ String h2_title(String title){
 }
 
 
+/*
+  void buildPlot(){
+  for(uint8_t i; i < numTraces; i++){
+    if (traceTime[i] < psTimeCycle){
+
+    }
+  }
+  }
+*/
+
+
 uint32_t httpFilterString(String httpRqst, String request){
   int posVal = httpRqst.indexOf('=', httpRqst.indexOf(request));
   int endNumber = httpRqst.indexOf(' ', posVal + 1);
@@ -191,38 +203,49 @@ void htmlPage(auto client) {
     operationMode = httpFilterString(httpRequest, "opMode=");
   }
 
-  if (httpRequest.indexOf("advancedSettings=on") > 0){  
-    if (httpRequest.indexOf("val1=")  > 0) {
-      tempVal = httpFilterString(httpRequest, "val1=");
-      noInterrupts();
-      calstartTime = tempVal;
-      interrupts();
-    }
-    if (httpRequest.indexOf("val2=")  > 0) {    
-      tempVal = httpFilterString(httpRequest, "val2=");
-      noInterrupts();
-      calstopTime =  tempVal;
-      interrupts();
-    }
-    if (httpRequest.indexOf("val3=")  > 0) {
-      tempVal = httpFilterString(httpRequest, "val3=");
-      noInterrupts();
-      injTime = tempVal;
-      interrupts();
-    }
-    if (httpRequest.indexOf("val4=")  > 0) {
-      tempVal = httpFilterString(httpRequest, "val4=");
-      noInterrupts();
-      hchTime = tempVal;
-      interrupts();
-    }
-    if (httpRequest.indexOf("val5=")  > 0) {
-      tempVal = httpFilterString(httpRequest, "val5=");
-      noInterrupts();
-      ecyTime = tempVal;
-      interrupts();
-    }
+  if (httpRequest.indexOf("val1=")  > 0) {
+    tempVal = httpFilterString(httpRequest, "val1=");
+    noInterrupts();
+    calstartTime = tempVal;
+    interrupts();
   }
+  if (httpRequest.indexOf("val2=")  > 0) {    
+    tempVal = httpFilterString(httpRequest, "val2=");
+    noInterrupts();
+    calstopTime =  tempVal;
+    interrupts();
+  }
+  if (httpRequest.indexOf("val3=")  > 0) {
+    tempVal = httpFilterString(httpRequest, "val3=");
+    noInterrupts();
+    injTime = tempVal;
+    interrupts();
+  }
+  if (httpRequest.indexOf("val4=")  > 0) {
+    tempVal = httpFilterString(httpRequest, "val4=");
+    noInterrupts();
+    hchTime = tempVal;
+    interrupts();
+  }
+  if (httpRequest.indexOf("val5=")  > 0) {
+    tempVal = httpFilterString(httpRequest, "val5=");
+    noInterrupts();
+    ecyTime = tempVal;
+    interrupts();
+  }
+
+  if (httpRequest.indexOf("reset=")  > 0) {
+    noInterrupts();
+    scyTime = SCY_T;            // time in uS
+    calstartTime = CALSTART_T;  // time in uS
+    calstopTime = CALSTOP_T;    // time in uS
+    injTime = INJ_T;            // time in uS
+    hchTime = HCH_T;            // time in uS
+    ecyTime = ECY_T;            // time in uS
+    psTimeCycle = PSCYCLE_T;    // time in uS
+    interrupts();
+  }
+  
 
   // start html
   String htmlPage = "";
@@ -261,11 +284,11 @@ void htmlPage(auto client) {
 
   htmlPage += h2_title("PLOTS");
   String html_2 = "<table>";
-  html_2 += "<tr><th>Name</th><th>t [uS]</th><th>Value</th></tr>"; 
+  html_2 += "<tr><th> </th><th>t [uS]</th><th>Value</th></tr>"; 
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
-    html_2 += "<tr><td>";
+    html_2 += "<tr><th>";
     html_2 += traceName[cnt];
-    html_2 += "</td><td>";
+    html_2 += "</th><td>";
     html_2 += traceTime[cnt];
     html_2 += "</td><td><pre>";  
     for (uint32_t i = 0; i < samplesNumber; i++) {

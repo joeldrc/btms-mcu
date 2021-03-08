@@ -70,17 +70,16 @@ IntervalTimer simulatedTiming;
 
 
 // Timer variables
-const uint32_t pulseTime = 1;         // time in uS
+const uint32_t pulseTime = 1;                 // time in uS
 
 // Timing for each cycle
-volatile uint32_t scyTime = 0;           // time in uS
-volatile uint32_t calstartTime = 5000;   // time in uS
-volatile uint32_t calstopTime = 100000;  // time in uS
-volatile uint32_t injTime = 170000;      // time in uS
-volatile uint32_t hchTime = 400000;      // time in uS
-volatile uint32_t ecyTime = 805000;      // time in uS
-
-const uint32_t psTimeCycle = 1200000; // time in uS
+volatile uint32_t scyTime = SCY_T;            // time in uS
+volatile uint32_t calstartTime = CALSTART_T;  // time in uS
+volatile uint32_t calstopTime = CALSTOP_T;    // time in uS
+volatile uint32_t injTime = INJ_T;            // time in uS
+volatile uint32_t hchTime = HCH_T;            // time in uS
+volatile uint32_t ecyTime = ECY_T;            // time in uS
+volatile uint32_t psTimeCycle = PSCYCLE_T;    // time in uS
 
 
 // interrupt variables
