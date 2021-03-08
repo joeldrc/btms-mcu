@@ -343,7 +343,7 @@ void setup() {
 
 void loop() {
   // operationMode selection
-  static int previousSetting = 255;
+  static uint32_t previousSetting = 255;
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 1: {
