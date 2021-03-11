@@ -66,7 +66,7 @@ const char html_1[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
-<title>BTMS CPU</title>
+<title>BTMS MCU</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 * {
@@ -157,7 +157,7 @@ const char html_10[] PROGMEM = R"rawliteral(
 
 
 String h1_title(int val){
-  String htm = "<div style=\"background-color:LightBlue;padding:15px;text-align:center;\"><h1>BTMS CPU #";
+  String htm = "<div style=\"background-color:LightBlue;padding:15px;text-align:center;\"><h1>BTMS MCU #";
   htm += val;
   htm += "</h1></div>";
   return htm;
@@ -278,7 +278,7 @@ void htmlPage(auto client) {
   if (lock == 0) htmlPage += showInfo("LawnGreen", "LOCK");
   else htmlPage += showInfo("LightGray", "LOCK");
 
-  htmlPage += showInfo("LightGray", "CPU T: " + String(cpuTemp) + " &#176;C");
+  htmlPage += showInfo("LightGray", "MCU T: " + String(cpuTemp) + " &#176;C");
   htmlPage += showInfo("LightGray", "BOX T: " + String(v1) + " &#176;C");
   htmlPage += showInfo("LightGray", "V2: " + String(v2) + " V");
   htmlPage += showInfo("LightGray", "V3: " + String(v3) + " V");
