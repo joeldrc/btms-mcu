@@ -66,7 +66,7 @@ const char html_1[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
-<title>BTMS CPU</title>
+<title>BTMS MCU</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 * {
@@ -76,6 +76,9 @@ footer {
   text-align: center;
   padding: 3px;
   background-color: LightBlue;
+}
+th, td {
+  padding: 3px;
 }
 </style>
 <script>
@@ -98,19 +101,19 @@ String setupTiming(){
   htm += "<div style=\"text-align:left;display: none;\" id=\"timingPanel\"><h3>SETUP TIMING</h3>";
   htm += "<form action=\"/\"><table>";
 
-  htm += "<tr><td>calstartTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val1\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "<tr><td>calstartTime (Value in &#181;s):</td><td><input type=\"number\" id=\"quantity\" name=\"val1\" min=\"1\" max=\"1200000\" value=\"";
   htm += calstartTime;
   htm += "\"></td></tr>";
-  htm += "<tr><td>calstopTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val2\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "<tr><td>calstopTime (Value in &#181;s):</td><td><input type=\"number\" id=\"quantity\" name=\"val2\" min=\"1\" max=\"1200000\" value=\"";
   htm += calstopTime;
   htm += "\"></td></tr>";
-  htm += "<tr><td>injTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val3\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "<tr><td>injTime (Value in &#181;s):</td><td><input type=\"number\" id=\"quantity\" name=\"val3\" min=\"1\" max=\"1200000\" value=\"";
   htm += injTime;
   htm += "\"></td></tr>";
-  htm += "<tr><td>hchTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val4\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "<tr><td>hchTime (Value in &#181;s):</td><td><input type=\"number\" id=\"quantity\" name=\"val4\" min=\"1\" max=\"1200000\" value=\"";
   htm += hchTime;
   htm += "\"></td></tr>";
-  htm += "<tr><td>ecyTime (Value in uS):</td><td><input type=\"number\" id=\"quantity\" name=\"val5\" min=\"1\" max=\"1200000\" value=\"";
+  htm += "<tr><td>ecyTime (Value in &#181;s):</td><td><input type=\"number\" id=\"quantity\" name=\"val5\" min=\"1\" max=\"1200000\" value=\"";
   htm += ecyTime;
   htm += "\"></td></tr>";
   
@@ -145,11 +148,11 @@ String opModeOption(int mode){
 }
 
 
-const char html_10[] PROGMEM = R"rawliteral(
+const char footer[] PROGMEM = R"rawliteral(
 <p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
 <br>
 <footer>
-  <p><b>Version: 2021.01.V.1.0</b><br><br><a style="color: DarkSlateGray;" href="mailto:joel.daricou@cern.ch">joel.daricou@cern.ch</a></p>
+  <p><b>V.2021.03</b><br><br><a style="color: DarkSlateGray;" href="mailto:joel.daricou@cern.ch">joel.daricou@cern.ch</a></p>
 </footer>
 </body>
 </html> 
@@ -157,7 +160,7 @@ const char html_10[] PROGMEM = R"rawliteral(
 
 
 String h1_title(int val){
-  String htm = "<div style=\"background-color:LightBlue;padding:15px;text-align:center;\"><h1>BTMS CPU #";
+  String htm = "<div style=\"background-color:LightBlue;padding:15px;text-align:center;\"><h1>BTMS MCU #";
   htm += val;
   htm += "</h1></div>";
   return htm;
@@ -165,11 +168,11 @@ String h1_title(int val){
 
 
 String showInfo(String color, String title){
-  String htm = "<p><svg width=\"14\" height=\"14\"><circle cx=\"7\" cy=\"7\" r=\"8\" fill=\"";
+  String htm = "<tr><td><svg width=\"14\" height=\"14\"><circle cx=\"7\" cy=\"7\" r=\"8\" fill=\"";
   htm += color;
   htm += "\"/> Your browser does not support inline SVG. </svg><b> ";
   htm += title;
-  htm += "</b></p>";
+  htm += "</b></td>";
   return htm;
 }
 
@@ -182,15 +185,22 @@ String h2_title(String title){
 }
 
 
-/*
-  void buildPlot(){
+void buildPlot(){
   for(uint8_t i; i < numTraces; i++){
     if (traceTime[i] < psTimeCycle){
-
+      uint32_t val = traceTime[i] / 5000;
+      
+      for(int cnt; cnt < samplesNumber; cnt++){
+        if(val == cnt){
+          plot[i][cnt] == 1;
+        }
+        else{
+          plot[i][cnt] == 0;
+        }
+      }     
     }
   }
-  }
-*/
+}
 
 
 uint32_t httpFilterString(String httpRqst, String request){
@@ -244,13 +254,13 @@ void htmlPage(auto client) {
 
   if (httpRequest.indexOf("reset=")  > 0) {
     noInterrupts();
-    scyTime = SCY_T;            // time in uS
-    calstartTime = CALSTART_T;  // time in uS
-    calstopTime = CALSTOP_T;    // time in uS
-    injTime = INJ_T;            // time in uS
-    hchTime = HCH_T;            // time in uS
-    ecyTime = ECY_T;            // time in uS
-    psTimeCycle = PSCYCLE_T;    // time in uS
+    scyTime = SCY_T;            // time in µs
+    calstartTime = CALSTART_T;  // time in µs
+    calstopTime = CALSTOP_T;    // time in µs
+    injTime = INJ_T;            // time in µs
+    hchTime = HCH_T;            // time in µs
+    ecyTime = ECY_T;            // time in µs
+    psTimeCycle = PSCYCLE_T;    // time in µs
     interrupts();
   }
   
@@ -269,30 +279,34 @@ void htmlPage(auto client) {
   htmlPage += h1_title(BoardSN);
 
   htmlPage += h2_title("CONTROL PANEL");
-  if (boardStatus == 0) htmlPage += showInfo("LawnGreen", "Board Status");
-  else htmlPage += showInfo("Red", "Board Status");
-  
-  if (det10Mhz == 1) htmlPage += showInfo("LawnGreen", "DET10MHz");
-  else htmlPage += showInfo("LightGray", "DET10MHz");
-  
-  if (lock == 0) htmlPage += showInfo("LawnGreen", "LOCK");
-  else htmlPage += showInfo("LightGray", "LOCK");
 
-  htmlPage += showInfo("LightGray", "CPU T: " + String(cpuTemp) + " &#176;C");
-  htmlPage += showInfo("LightGray", "BOX T: " + String(v1) + " &#176;C");
-  htmlPage += showInfo("LightGray", "V2: " + String(v2) + " V");
-  htmlPage += showInfo("LightGray", "V3: " + String(v3) + " V");
-  htmlPage += showInfo("LightGray", "V4: " + String(v4) + " V");
+  htmlPage += "<span style=\"font-weight:bold\"><table>";
+  if (boardStatus == 0) htmlPage += showInfo("LawnGreen", "<td>BOARD STATUS</td></tr>");
+  else htmlPage += showInfo("Red", "<td>BOARD STATUS</td></tr>");
+  
+  if (det10Mhz == 1) htmlPage += showInfo("LawnGreen", "<td>DET10MHz</td></tr>");
+  else htmlPage += showInfo("LightGray", "<td>DET10MHz</td></tr>");
+  
+  if (lock == 0) htmlPage += showInfo("LawnGreen", "<td>LOCK</td></tr>");
+  else htmlPage += showInfo("LightGray", "<td>LOCK</td></tr>");
+
+  htmlPage += showInfo("LightGray", "<td>MCU temp:</td><td>" + String(cpuTemp) + " &#176;C</td></tr>");
+  htmlPage += showInfo("LightGray", "<td>BOX temp:</td><td>" + String(v1) + " &#176;C</td></tr>");
+  htmlPage += showInfo("LightGray", "<td>V3 (-12V):</td><td>" + String(v2) + " V</td></tr>");
+  htmlPage += showInfo("LightGray", "<td>V2 (+12V):</td><td>" + String(v3) + " V</td></tr>");
+  htmlPage += showInfo("LightGray", "<td>V1 (+5V):</td><td>" + String(v4) + " V</td></tr>");
+  htmlPage += "</table></span>";
 
   
   htmlPage += h2_title("SETTINGS");
   htmlPage += opModeOption(operationMode);
   htmlPage += setupTiming();
 
-
   htmlPage += h2_title("PLOTS");
+  buildPlot();
+  
   String html_2 = "<table>";
-  html_2 += "<tr><th> </th><th>t [uS]</th><th>Value</th></tr>"; 
+  html_2 += "<tr><th> </th><th>&#181;s</th><th>time scale in ms</th></tr>"; 
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
     html_2 += "<tr><th>";
     html_2 += traceName[cnt];
@@ -320,7 +334,7 @@ void htmlPage(auto client) {
 
 
   htmlPage += html_2; 
-  htmlPage += html_10;
+  htmlPage += footer;
 
 // send html page
 client.println(htmlPage);

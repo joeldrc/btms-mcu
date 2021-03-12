@@ -47,7 +47,7 @@ volatile float cpuTemp = 0;
 
 
 // plot for webPage
-const uint32_t samplesNumber = 150; // 2400m
+const uint32_t samplesNumber = 240; // 1200 milliseconds / 5 = 240 samples
 const uint8_t numTraces = 5;
 const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"ECY"}};
 uint32_t traceTime[numTraces] = {0};
