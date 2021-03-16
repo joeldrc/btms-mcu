@@ -16,15 +16,20 @@
  ******************************************************************************
 */
 
+
 #include "defines.h"
 #include <ADC.h>
 #include <ADC_util.h>
 #include <Bounce.h>
 #include "src\TeensyThreads\TeensyThreads.h"
+#include <SPI.h>
+#include <fnet.h>
+#include "src\NativeEthernet\NativeEthernet.h"
 
 
 /*** Global variables **/
 uint8_t BoardSN =   0;
+uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 
 // 0: read only
 // 1: simulate SCY and ECY
@@ -114,14 +119,14 @@ FASTRUN void interrupt_IECY() {
 extern float tempmonGetTemp(void);
 
 
-uint8_t readSettingSwitch() {
+uint8_t readSettingSwitch(uint8_t pinA, uint8_t pinB) {
   // Read the current four-bit
   uint8_t b = 0;
   // The switch are active LOW
-  if (digitalReadFast(SW4) == 0) b |= 1;
-  if (digitalReadFast(SW3) == 0) b |= 2;
-  if (digitalReadFast(SW2) == 0) b |= 4;
-  if (digitalReadFast(SW1) == 0) b |= 8;
+  if (digitalReadFast(pinA) == 0) b |= 1;
+  if (digitalReadFast(pinB) == 0) b |= 2;
+  //if (digitalReadFast(pinC) == 0) b |= 4;
+  //if (digitalReadFast(pinD) == 0) b |= 8;
   return (b);
 }
 
@@ -323,12 +328,19 @@ void setup() {
   Serial.println("BTMS mcu serial monitor");
 
   // Read hardware switch
-  Serial.print("Setting switch: ");
-  Serial.print(readSettingSwitch());
+  Serial.print("Setting switch 1,2: ");
+  Serial.print(readSettingSwitch(SW4, SW3));
+  Serial.println();
+
+  Serial.print("Setting switch 3,4: ");
+  Serial.print(readSettingSwitch(SW2, SW1));
   Serial.println();
 
   // Set board serial number
-  BoardSN = readSettingSwitch();
+  BoardSN = readSettingSwitch(SW4, SW3);
+
+  // Set mac address
+  mac[5] += BoardSN;
 
   // Timer setup
   // Set the interrupt priority level,

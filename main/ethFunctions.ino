@@ -1,12 +1,5 @@
 
 
-#include <SPI.h>
-#include <fnet.h>
-#include "src\NativeEthernet\NativeEthernet.h"
-
-
-uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
-
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
