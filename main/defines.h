@@ -1,15 +1,13 @@
 
 
-const uint8_t BoardSN =   0;
-
 // Timing for each cycle
-const uint32_t SCY_T = 0;           // time in uS
-const uint32_t CALSTART_T = 5000;   // time in uS
-const uint32_t CALSTOP_T = 100000;  // time in uS
-const uint32_t INJ_T = 170000;      // time in uS
-const uint32_t HCH_T = 400000;      // time in uS
-const uint32_t ECY_T  = 805000;     // time in uS
-const uint32_t PSCYCLE_T = 1200000; // time in uS
+const uint32_t SCY_T =      0;       // time in uS
+const uint32_t CALSTART_T = 5000;    // time in uS
+const uint32_t CALSTOP_T =  100000;  // time in uS
+const uint32_t INJ_T =      170000;  // time in uS
+const uint32_t HCH_T =      400000;  // time in uS
+const uint32_t ECY_T  =     805000;  // time in uS
+const uint32_t PSCYCLE_T =  1200000; // time in uS
 
 // pin assignment
 const uint8_t TEN =       8;

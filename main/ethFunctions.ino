@@ -5,17 +5,17 @@
 #include "src\NativeEthernet\NativeEthernet.h"
 
 
-EthernetServer server(80);
 uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
-
 
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
-
 // size of buffer to store HTTP requests
 const uint8_t REQUEST_BUFFER = 100;
 String httpRequest = ""; // HTTP request string
+
+
+EthernetServer server(80);
 
 
 void ethernetConfig_thread() {
@@ -25,6 +25,7 @@ void ethernetConfig_thread() {
 
   // start the server
   server.begin();
+
   Serial.print("MAC: ");
   for (byte octet = 0; octet < 6; octet++) {
     Serial.print(mac[octet], HEX);
@@ -186,16 +187,16 @@ String h2_title(String title){
 
 
 void buildPlot(){
-  for(uint8_t i; i < numTraces; i++){
+  for(uint8_t i=0; i < numTraces; i++){
     if (traceTime[i] < psTimeCycle){
       uint32_t val = traceTime[i] / 5000;
       
-      for(int cnt; cnt < samplesNumber; cnt++){
+      for(uint32_t cnt=0; cnt < samplesNumber; cnt++){
         if(val == cnt){
-          plot[i][cnt] == 1;
+          plot[i][cnt] = 1;
         }
         else{
-          plot[i][cnt] == 0;
+          plot[i][cnt] = 0;
         }
       }     
     }
@@ -214,7 +215,6 @@ uint32_t httpFilterString(String httpRqst, String request){
 
 
 void htmlPage(auto client) {
-
   uint32_t tempVal = 0;
   
   if (httpRequest.indexOf("opMode=")  > 0) {
@@ -264,8 +264,7 @@ void htmlPage(auto client) {
     interrupts();
   }
   
-
-  // start html
+  // Start html
   String htmlPage = "";
   htmlPage += "HTTP/1.1 200 OK";
   htmlPage += "Content-Type: text/html";
@@ -306,7 +305,7 @@ void htmlPage(auto client) {
   buildPlot();
   
   String html_2 = "<table>";
-  html_2 += "<tr><th> </th><th>&#181;s</th><th>time scale in ms</th></tr>"; 
+  html_2 += "<tr><th> </th><th>Time in &#181;s</th><th>Time scale in ms</th></tr>"; 
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
     html_2 += "<tr><th>";
     html_2 += traceName[cnt];
@@ -332,15 +331,14 @@ void htmlPage(auto client) {
   }
   html_2 += "</table>";
 
-
   htmlPage += html_2; 
   htmlPage += footer;
 
-// send html page
-client.println(htmlPage);
-
-// close client connection
-client.close();
+  // send html page
+  client.println(htmlPage);
+  
+  // close client connection
+  client.close();
 }
 
 
