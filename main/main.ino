@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
-  @file    BTMS timing mcu
+  @file    BTMS mcu
   @author  Joel Daricou  <joel.daricou@cern.ch>
   @brief   web server ctrl I/O
  ******************************************************************************
@@ -17,56 +17,40 @@
 */
 
 #include "defines.h"
-
 #include <ADC.h>
 #include <ADC_util.h>
-
 #include <Bounce.h>
 #include "src\TeensyThreads\TeensyThreads.h"
 
 
-Bounce pushbutton1 = Bounce(SW6, 10);  // 10 ms debounce
-Bounce pushbutton2 = Bounce(SW5, 10);  // 10 ms debounce
-
-
-// chip temperature
-extern float tempmonGetTemp(void);
-
-
 /*** Global variables **/
+uint8_t BoardSN =   0;
+
 // 0: read only
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
 volatile uint32_t operationMode = 0;
+
 volatile bool boardStatus = 0;
 volatile bool det10Mhz = 0;
 volatile bool lock = 0;
-
 volatile float cpuTemp = 0;
 
 
-// plot for webPage
+// plot for web page
 const uint32_t samplesNumber = 240; // 1200 milliseconds / 5 = 240 samples
 const uint8_t numTraces = 5;
-const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"ECY"}};
+const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"HCH"}, {"ECY"}};
 uint32_t traceTime[numTraces] = {0};
 bool plot[numTraces][samplesNumber] = {0};
 
 
-// other webPage
+// analog values web page
 float v1 = 0;
 float v2 = 0;
 float v3 = 0;
 float v4 = 0;
-
-
-// Timing object
-elapsedMicros timing;
-
-
-// Timer object
-IntervalTimer simulatedTiming;
 
 
 // Timer variables
@@ -90,23 +74,44 @@ volatile uint32_t harmonicChange = 0;
 volatile uint32_t endOfCycle = 0;
 
 
+// button object
+Bounce pushbutton1 = Bounce(SW6, 10);  // 10 ms debounce
+Bounce pushbutton2 = Bounce(SW5, 10);  // 10 ms debounce
+
+
+// timing object
+elapsedMicros timing;
+
+
+// timer object
+IntervalTimer simulatedTiming;
+
+
 // interrupt functions
 FASTRUN void interrupt_ISCY() {
   timing = 0;
   startOfcycle = timing;
 }
+
 FASTRUN void interrupt_ICalStrt() {
   calStart = timing;
 }
+
 FASTRUN void interrupt_ICalStp() {
   calStop = timing;
 }
+
 FASTRUN void interrupt_IHCH() {
   harmonicChange = timing;
 }
+
 FASTRUN void interrupt_IECY() {
   endOfCycle = timing;
 }
+
+
+// mcu temperature
+extern float tempmonGetTemp(void);
 
 
 uint8_t readSettingSwitch() {
@@ -125,7 +130,6 @@ void ctrlEthernetThread() {
   while (1) {
     ctrlConnection();
     ethernetConfig_thread();
-
     threads.delay(4000);
     threads.yield();
   }
@@ -181,28 +185,20 @@ void heartBeatThread() {
           }
         }
         break;
-
       case 1: {
           val = 0b00000011;
         }
         break;
-
       case 2: {
           val = 0b00000111;
         }
         break;
-
       case 3: {
           val = 0b00001111;
         }
         break;
     }
     displayLeds(val);
-
-    // Read hardware switch
-    Serial.print("Setting switch: ");
-    Serial.print(readSettingSwitch());
-    Serial.println();
 
     // Read digital inputs
     det10Mhz = digitalReadFast(_10MHzDet);
@@ -326,6 +322,14 @@ void setup() {
   Serial.begin(9600);
   Serial.println("BTMS mcu serial monitor");
 
+  // Read hardware switch
+  Serial.print("Setting switch: ");
+  Serial.print(readSettingSwitch());
+  Serial.println();
+
+  // Set board serial number
+  BoardSN = readSettingSwitch();
+
   // Timer setup
   // Set the interrupt priority level,
   // controlling which other interrupts this timer is allowed to interrupt.
@@ -380,15 +384,25 @@ void loop() {
     previousSetting = operationMode;
   }
 
-  // read incoming timing on the interrupts
-  noInterrupts();
-  traceTime[0] = startOfcycle;
-  traceTime[1] = calStart;
-  traceTime[2] = calStop;
-  traceTime[3] = harmonicChange;
-  traceTime[4] = endOfCycle;
-  interrupts();
+  if (operationMode == 0) {
+    // Read incoming timing on the interrupts
+    noInterrupts();
+    traceTime[0] = startOfcycle;
+    traceTime[1] = calStart;
+    traceTime[2] = calStop;
+    traceTime[3] = harmonicChange;
+    traceTime[4] = endOfCycle;
+    interrupts();
+  }
+  else {
+    // Read simulated cycle
+    traceTime[0] = scyTime;
+    traceTime[1] = calstartTime;
+    traceTime[2] = calstopTime;
+    traceTime[3] = hchTime;
+    traceTime[4] = ecyTime;
 
+  }
 
   // Check buttons
   if (pushbutton1.update()) {
