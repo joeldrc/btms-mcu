@@ -74,6 +74,10 @@ footer {
 th, td {
   padding: 3px;
 }
+.resizable {
+  resize: both;
+  overflow: scroll;
+}
 </style>
 <script>
 function addOptionsFunction() {
@@ -297,7 +301,7 @@ void htmlPage(auto client) {
   htmlPage += h2_title("PLOTS");
   buildPlot();
   
-  String html_2 = "<table>";
+  String html_2 = "<div class=\"resizable\"><table>";
   html_2 += "<tr><th> </th><th>Time in &#181;s</th><th>Time scale in ms</th></tr>"; 
   for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
     html_2 += "<tr><th>";
@@ -322,7 +326,7 @@ void htmlPage(auto client) {
     */
     html_2 += "</pre></td></tr>";
   }
-  html_2 += "</table>";
+  html_2 += "</table><br></div>";
 
   htmlPage += html_2; 
   htmlPage += footer;
