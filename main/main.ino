@@ -216,7 +216,7 @@ void heartBeatThread() {
     v3 = analogRead(ADC12);
     v4 = analogRead(ADC13);
 
-    v1 = map(v1, 0, 4095, 0, 50);
+    v1 = map(v1, 0, 4095, -3.15, 51.85);
     v2 = map(v2, 0, 4095, -21.6, 0);
     v3 = map(v3, 0, 4095, 0, 18.3);
     v4 = map(v4, 0, 4095, 0, 8.3);
