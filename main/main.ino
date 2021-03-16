@@ -179,15 +179,16 @@ void heartBeatThread() {
     ledVal = !ledVal;
 
     // Set front panel leds
-    static uint8_t val = 1;
+    static uint8_t val = 0;
+    static uint8_t cnt = 0;
     switch (operationMode) {
       case 0: {
-          if (val < 128) {
-            val = val << 1;
+          val = 0b00000000;
+          if (cnt == 8) {
+            cnt = 0;
           }
-          else {
-            val = 1;
-          }
+          val = 1 << cnt;
+          cnt++;
         }
         break;
       case 1: {
