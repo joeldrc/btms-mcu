@@ -385,7 +385,7 @@ void loop() {
         }
         break;
       default: {
-          digitalWriteFast(TEN, LOW); // inhibit external timings
+          digitalWriteFast(TEN, HIGH); // enable external timings
 
           simulatedTiming.end();
           operationMode = 0;
