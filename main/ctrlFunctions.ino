@@ -8,7 +8,7 @@ FASTRUN void simulatedCycle1() {
   switch (cnt_cycle) {
     // SCY
     case 0: {
-        digitalWriteFast(TEN, HIGH);
+        digitalWriteFast(TEN, LOW); // enable internal timing
 
         digitalWriteFast(SSCY, LOW);
         delayMicroseconds(pulseTime);
@@ -40,7 +40,7 @@ FASTRUN void simulatedCycle2() {
   switch (cnt_cycle) {
     // SCY
     case 0: {
-        digitalWriteFast(TEN, HIGH);
+        digitalWriteFast(TEN, LOW); // enable internal timing
 
         digitalWriteFast(SSCY, LOW);
         delayMicroseconds(pulseTime);
@@ -82,7 +82,7 @@ FASTRUN void simulatedCycle3() {
   switch (cnt_cycle) {
     // SCY
     case 0: {
-        digitalWriteFast(TEN, HIGH);
+        digitalWriteFast(TEN, LOW); // enable internal timing
 
         digitalWriteFast(SSCY, LOW);
         delayMicroseconds(pulseTime);
