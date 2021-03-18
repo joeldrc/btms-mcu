@@ -28,32 +28,33 @@
 
 
 /*** Global variables **/
-uint8_t boardSN =   0;
-uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
+volatile uint8_t boardSN =   0;
+volatile uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 
 // 0: read only
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
-int32_t operationMode = 0;
+volatile int32_t operationMode = 0;
 
-bool det10Mhz = 0;
-bool lock = 0;
-float cpuTemp = 0;
+// digital values for the web page
+volatile bool det10Mhz = 0;
+volatile bool lock = 0;
 
-// analog values web page
-float v1 = 0;
-float v2 = 0;
-float v3 = 0;
-float v4 = 0;
+// analog values for the web page
+volatile float cpuTemp = 0;
+volatile float v1 = 0;
+volatile float v2 = 0;
+volatile float v3 = 0;
+volatile float v4 = 0;
 
 // plot for web page
 const uint32_t samplesNumber = 240; // 1200 milliseconds / 5 = 240 samples
 const uint8_t numTraces = 5;
 const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"HCH"}, {"ECY"}};
-uint32_t traceTime[numTraces] = {0};
-bool plot[numTraces][samplesNumber] = {0};
 
+volatile uint32_t traceTime[numTraces] = {0};
+volatile bool plot[numTraces][samplesNumber] = {0};
 
 // Timer variables
 const uint32_t pulseTime = 1;                 // time in uS
@@ -66,7 +67,6 @@ volatile uint32_t injTime = INJ_T;            // time in uS
 volatile uint32_t hchTime = HCH_T;            // time in uS
 volatile uint32_t ecyTime = ECY_T;            // time in uS
 volatile uint32_t psTimeCycle = PSCYCLE_T;    // time in uS
-
 
 // interrupt variables
 volatile uint32_t startOfcycle = 0;
@@ -90,7 +90,7 @@ IntervalTimer simulatedTiming;
 
 // interrupt functions
 FASTRUN void interrupt_ISCY() {
-  timing = 0;
+  timing = 1;
   startOfcycle = timing;
 }
 
@@ -130,7 +130,6 @@ uint8_t readSettingSwitch(uint8_t pinA, uint8_t pinB) {
 void ctrlEthernetThread() {
   while (1) {
     int linkStatusLed = ctrlConnection();
-
     switch (linkStatusLed) {
       case 1: {
           // connected (led green)
@@ -151,7 +150,6 @@ void ctrlEthernetThread() {
         }
         break;
     }
-
     ethernetConfig_thread();
     threads.delay(2000);
     threads.yield();
@@ -168,22 +166,38 @@ void displayLeds(int byt) {
       byt = byt / 2;
       d++;
     }
-    if (binary[0] == 1) digitalWrite(StsLed1, HIGH);
-    else digitalWrite(StsLed1, LOW);
-    if (binary[1] == 1) digitalWrite(StsLed2, HIGH);
-    else digitalWrite(StsLed2, LOW);
-    if (binary[2] == 1) digitalWrite(StsLed3, HIGH);
-    else digitalWrite(StsLed3, LOW);
-    if (binary[3] == 1) digitalWrite(StsLed4, HIGH);
-    else digitalWrite(StsLed4, LOW);
-    if (binary[4] == 1) digitalWrite(StsLed5, HIGH);
-    else digitalWrite(StsLed5, LOW);
-    if (binary[5] == 1) digitalWrite(StsLed6, HIGH);
-    else digitalWrite(StsLed6, LOW);
-    if (binary[6] == 1) digitalWrite(StsLed7, HIGH);
-    else digitalWrite(StsLed7, LOW);
-    if (binary[7] == 1) digitalWrite(StsLed8, HIGH);
-    else digitalWrite(StsLed8, LOW);
+    if (binary[0] == 1)
+      digitalWrite(StsLed1, HIGH);
+    else
+      digitalWrite(StsLed1, LOW);
+    if (binary[1] == 1)
+      digitalWrite(StsLed2, HIGH);
+    else
+      digitalWrite(StsLed2, LOW);
+    if (binary[2] == 1)
+      digitalWrite(StsLed3, HIGH);
+    else
+      digitalWrite(StsLed3, LOW);
+    if (binary[3] == 1)
+      digitalWrite(StsLed4, HIGH);
+    else
+      digitalWrite(StsLed4, LOW);
+    if (binary[4] == 1)
+      digitalWrite(StsLed5, HIGH);
+    else
+      digitalWrite(StsLed5, LOW);
+    if (binary[5] == 1)
+      digitalWrite(StsLed6, HIGH);
+    else
+      digitalWrite(StsLed6, LOW);
+    if (binary[6] == 1)
+      digitalWrite(StsLed7, HIGH);
+    else
+      digitalWrite(StsLed7, LOW);
+    if (binary[7] == 1)
+      digitalWrite(StsLed8, HIGH);
+    else
+      digitalWrite(StsLed8, LOW);
   }
 }
 
@@ -192,7 +206,6 @@ void heartBeatThread() {
   while (1) {
     // Set front panel leds
     static uint8_t val = 0b00000000;
-    static uint8_t cnt = 0;
 
     switch (operationMode) {
       case 0: {
@@ -213,21 +226,25 @@ void heartBeatThread() {
         break;
     }
 
-    if (cnt < 4) {
+    static uint8_t bitShift = 0b00000000;
+    static uint8_t cnt = 0;
+    if (cnt < 3) {
+      bitShift += 1 << cnt;
       if (operationMode == 0) {
-        val += 1 << cnt;
+        val += bitShift;
       }
       cnt++;
     }
-    else if (cnt == 4) {
-      val += 0b00001111;
+    else if (cnt == 3) {
+      bitShift = 0b00001111;
+      val += bitShift;
       cnt++;
     }
     else {
-      val += 0b00000000;
+      bitShift = 0b00000000;
+      val += bitShift;
       cnt = 0;
     }
-
     displayLeds(val);
 
     // Read digital inputs
@@ -248,7 +265,7 @@ void heartBeatThread() {
     // read CPU temperature
     cpuTemp = tempmonGetTemp();
 
-    threads.delay(200);
+    threads.delay(240);
     threads.yield();
   }
 }
@@ -384,7 +401,7 @@ void setup() {
 
 void loop() {
   // operationMode selection
-  static int32_t previousSetting = 255;
+  static int32_t previousSetting = 0;
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 1: {
@@ -410,7 +427,6 @@ void loop() {
         break;
       default: {
           digitalWriteFast(TEN, HIGH); // enable external timings
-
           simulatedTiming.end();
           operationMode = 0;
         }
@@ -421,23 +437,45 @@ void loop() {
     previousSetting = operationMode;
   }
 
-  if (operationMode == 0) {
-    // Read incoming timing on the interrupts
-    noInterrupts();
-    traceTime[0] = startOfcycle;
-    traceTime[1] = calStart;
-    traceTime[2] = calStop;
-    traceTime[3] = harmonicChange;
-    traceTime[4] = endOfCycle;
-    interrupts();
-  }
-  else {
-    // Read simulated cycle
-    traceTime[0] = scyTime;
-    traceTime[1] = calstartTime;
-    traceTime[2] = calstopTime;
-    traceTime[3] = hchTime;
-    traceTime[4] = ecyTime;
+  switch (operationMode) {
+    case 1: {
+        // Read simulated cycle
+        traceTime[0] = scyTime;
+        traceTime[1] = 0;
+        traceTime[2] = 0;
+        traceTime[3] = 0;
+        traceTime[4] = ecyTime;
+      }
+      break;
+    case 2: {
+        // Read simulated cycle
+        traceTime[0] = scyTime;
+        traceTime[1] = 0;
+        traceTime[2] = 0;
+        traceTime[3] = 0;
+        traceTime[4] = ecyTime;
+      }
+      break;
+    case 3: {
+        // Read simulated cycle
+        traceTime[0] = scyTime;
+        traceTime[1] = calstartTime;
+        traceTime[2] = calstopTime;
+        traceTime[3] = hchTime;
+        traceTime[4] = ecyTime;
+      }
+      break;
+    default: {
+        // Read incoming timing on the interrupts
+        noInterrupts();
+        traceTime[0] = startOfcycle;
+        traceTime[1] = calStart;
+        traceTime[2] = calStop;
+        traceTime[3] = harmonicChange;
+        traceTime[4] = endOfCycle;
+        interrupts();
+      }
+      break;
   }
 
   // Check buttons
