@@ -1,6 +1,6 @@
 
 
-volatile uint32_t timerValue = 10000;
+volatile uint32_t timerValue = 1000;
 volatile uint8_t cnt_cycle = 0;
 
 

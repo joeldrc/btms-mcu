@@ -3,6 +3,7 @@
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
+
 // size of buffer to store HTTP requests
 const uint8_t REQUEST_BUFFER = 100;
 String httpRequest = ""; // HTTP request string
@@ -272,12 +273,12 @@ void htmlPage(auto client) {
 
   htmlPage += html_1;
 
-  htmlPage += h1_title(BoardSN);
+  htmlPage += h1_title(boardSN);
 
   htmlPage += h2_title("CONTROL PANEL");
 
   htmlPage += "<span style=\"font-weight:bold\"><table>";
-  if (boardStatus == 0) htmlPage += showInfo("LawnGreen", "<td>BOARD STATUS</td></tr>");
+  if (true) htmlPage += showInfo("LawnGreen", "<td>BOARD STATUS</td></tr>");
   else htmlPage += showInfo("Red", "<td>BOARD STATUS</td></tr>");
   
   if (det10Mhz == 1) htmlPage += showInfo("LawnGreen", "<td>DET10MHz</td></tr>");

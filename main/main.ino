@@ -28,20 +28,24 @@
 
 
 /*** Global variables **/
-uint8_t BoardSN =   0;
+uint8_t boardSN =   0;
 uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 
 // 0: read only
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
-volatile uint32_t operationMode = 0;
+int32_t operationMode = 0;
 
-volatile bool boardStatus = 0;
-volatile bool det10Mhz = 0;
-volatile bool lock = 0;
-volatile float cpuTemp = 0;
+bool det10Mhz = 0;
+bool lock = 0;
+float cpuTemp = 0;
 
+// analog values web page
+float v1 = 0;
+float v2 = 0;
+float v3 = 0;
+float v4 = 0;
 
 // plot for web page
 const uint32_t samplesNumber = 240; // 1200 milliseconds / 5 = 240 samples
@@ -49,13 +53,6 @@ const uint8_t numTraces = 5;
 const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"HCH"}, {"ECY"}};
 uint32_t traceTime[numTraces] = {0};
 bool plot[numTraces][samplesNumber] = {0};
-
-
-// analog values web page
-float v1 = 0;
-float v2 = 0;
-float v3 = 0;
-float v4 = 0;
 
 
 // Timer variables
@@ -86,7 +83,6 @@ Bounce pushbutton2 = Bounce(SW5, 10);  // 10 ms debounce
 
 // timing object
 elapsedMicros timing;
-
 
 // timer object
 IntervalTimer simulatedTiming;
@@ -338,10 +334,10 @@ void setup() {
   Serial.println();
 
   // Set board serial number
-  BoardSN = readSettingSwitch(SW4, SW3);
+  boardSN = readSettingSwitch(SW4, SW3);
 
   // Set mac address
-  mac[5] += BoardSN;
+  mac[5] += boardSN;
 
   // Timer setup
   // Set the interrupt priority level,
@@ -360,7 +356,7 @@ void setup() {
 
 void loop() {
   // operationMode selection
-  static uint32_t previousSetting = 255;
+  static int32_t previousSetting = 255;
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 1: {
@@ -414,7 +410,6 @@ void loop() {
     traceTime[2] = calstopTime;
     traceTime[3] = hchTime;
     traceTime[4] = ecyTime;
-
   }
 
   // Check buttons
