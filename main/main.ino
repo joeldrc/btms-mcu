@@ -129,9 +129,31 @@ uint8_t readSettingSwitch(uint8_t pinA, uint8_t pinB) {
 
 void ctrlEthernetThread() {
   while (1) {
-    ctrlConnection();
+    int linkStatusLed = ctrlConnection();
+
+    switch (linkStatusLed) {
+      case 1: {
+          // connected (led green)
+          digitalWrite(StsLedGr, LOW);
+          digitalWrite(StsLedOr, HIGH);
+        }
+        break;
+      case -1: {
+          // unknown (led orange blinking)
+          digitalWrite(StsLedGr, HIGH);
+          digitalWrite(StsLedOr, LOW);
+        }
+        break;
+      default: {
+          // not connected (led off)
+          digitalWrite(StsLedGr, HIGH);
+          digitalWrite(StsLedOr, HIGH);
+        }
+        break;
+    }
+
     ethernetConfig_thread();
-    threads.delay(4000);
+    threads.delay(2000);
     threads.yield();
   }
 }
@@ -168,38 +190,44 @@ void displayLeds(int byt) {
 
 void heartBeatThread() {
   while (1) {
-    // Set status leds
-    static bool ledVal = false;
-    digitalWrite(StsLedGr, ledVal);
-    digitalWrite(StsLedOr, HIGH);
-    ledVal = !ledVal;
-
     // Set front panel leds
-    static uint8_t val = 0;
+    static uint8_t val = 0b00000000;
     static uint8_t cnt = 0;
+
     switch (operationMode) {
       case 0: {
-          val = 0b00000000;
-          if (cnt == 8) {
-            cnt = 0;
-          }
-          val = 1 << cnt;
-          cnt++;
+          val = 0b10000000;
         }
         break;
       case 1: {
-          val = 0b00000011;
+          val = 0b11000000;
         }
         break;
       case 2: {
-          val = 0b00000111;
+          val = 0b11100000;
         }
         break;
       case 3: {
-          val = 0b00001111;
+          val = 0b11110000;
         }
         break;
     }
+
+    if (cnt < 4) {
+      if (operationMode == 0) {
+        val += 1 << cnt;
+      }
+      cnt++;
+    }
+    else if (cnt == 4) {
+      val += 0b00001111;
+      cnt++;
+    }
+    else {
+      val += 0b00000000;
+      cnt = 0;
+    }
+
     displayLeds(val);
 
     // Read digital inputs
@@ -220,7 +248,7 @@ void heartBeatThread() {
     // read CPU temperature
     cpuTemp = tempmonGetTemp();
 
-    threads.delay(500);
+    threads.delay(200);
     threads.yield();
   }
 }
