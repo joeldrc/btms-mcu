@@ -28,8 +28,8 @@
 
 
 /*** Global variables **/
-volatile uint8_t boardSN =   0;
-volatile uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
+uint8_t boardSN =   0;
+uint8_t mac[] = { 0xDA, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 
 // 0: read only
 // 1: simulate SCY and ECY
