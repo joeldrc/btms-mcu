@@ -67,17 +67,17 @@ const char html_1[] PROGMEM = R"rawliteral(
 * {
   box-sizing: border-box;
 }
-footer {
-  text-align: center;
-  padding: 3px;
-  background-color: LightBlue;
-}
 th, td {
   padding: 3px;
 }
 .resizable {
   resize: both;
   overflow: scroll;
+}
+footer {
+  text-align: center;
+  padding: 3px;
+  background-color: LightBlue;
 }
 </style>
 <script>
@@ -151,7 +151,7 @@ const char footer[] PROGMEM = R"rawliteral(
 <p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
 <br>
 <footer>
-  <p><b>V.2021.03</b><br><br><a style="color: DarkSlateGray;" href="mailto:joel.daricou@cern.ch">joel.daricou@cern.ch</a></p>
+  <p><br>Version: 1.00<br><br>JD 03.2021<br><br></p>
 </footer>
 </body>
 </html> 
