@@ -1,7 +1,7 @@
 
 
 // Timing for each cycle
-const uint32_t SCY_T =      0;       // time in uS
+const uint32_t SCY_T =      1;       // time in uS
 const uint32_t CALSTART_T = 5000;    // time in uS
 const uint32_t CALSTOP_T =  100000;  // time in uS
 const uint32_t INJ_T =      170000;  // time in uS

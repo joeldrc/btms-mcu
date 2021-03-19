@@ -128,8 +128,8 @@ String opModeOption(int mode){
   htm += "</b><br><br></label>";
   htm += "<select name=\"opMode\" id=\"opMode\"><optgroup label=\"Read only\">";
   
-  if (mode==0) htm += "<option value=\"0\" selected>0. READ TIMING</option>";
-  else htm += "<option value=\"0\">0. READ TIMING</option>";
+  if (mode==0) htm += "<option value=\"0\" selected>0. Read timing</option>";
+  else htm += "<option value=\"0\">0. Read timing</option>";
   
   htm += "</optgroup><optgroup label=\"Simulated\">";
 
@@ -187,15 +187,18 @@ String h2_title(String title){
 void buildPlot(){
   for(uint8_t i=0; i < numTraces; i++){
     if (traceTime[i] < psTimeCycle){
-      uint32_t val = traceTime[i] / 5000;
+      uint32_t val = traceTime[i] / 5000;     
       
-      for(uint32_t cnt=0; cnt < samplesNumber; cnt++){
-        if(val == cnt){
-          plot[i][cnt] = 1;
+      for(uint32_t cnt = 0; cnt < samplesNumber; cnt++){  
+        if ((traceTime[i] == 1) && (cnt == 0)){
+          plot[i][cnt] = 1; 
+        }
+        else if((val == cnt) && (cnt != 0)){
+          plot[i][cnt] = 1;         
         }
         else{
           plot[i][cnt] = 0;
-        }
+        } 
       }     
     }
   }
