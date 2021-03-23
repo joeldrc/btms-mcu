@@ -319,9 +319,9 @@ void setup() {
   pinMode(SHCH, OUTPUT);
   pinMode(SECY, OUTPUT);
 
-  digitalWriteFast(TEN, LOW);
-
   // active low signals
+  digitalWriteFast(TEN, HIGH);
+
   digitalWriteFast(SSCY, HIGH);
   digitalWriteFast(SCalStrt, HIGH);
   digitalWriteFast(SCalStp, HIGH);
@@ -396,12 +396,17 @@ void setup() {
 
   // Analog setup
   analogReadResolution(12); // set bits of resolution
+
+  // Reset CALSTOP (to fix an hardware problem)
+  digitalWriteFast(SCalStp, LOW);
+  delayMicroseconds(pulseTime);
+  digitalWriteFast(SCalStp, HIGH);
 }
 
 
 void loop() {
   // operationMode selection
-  static int32_t previousSetting = 0;
+  static int32_t previousSetting = -1;
   if (previousSetting != operationMode) {
     switch (operationMode) {
       case 1: {
