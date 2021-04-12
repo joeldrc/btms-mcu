@@ -97,7 +97,7 @@ function addOptionsFunction() {
 
 String setupTiming(){
   String htm = "<br><input type=\"checkbox\" onclick=\"addOptionsFunction()\" name=\"advancedSettings\">Advanced settings</p>";
-  htm += "<div style=\"text-align:left;display: none;\" id=\"timingPanel\"><h3>SETUP TIMING</h3>";
+  htm += "<div style=\"text-align:left;display: none;\" id=\"timingPanel\"><h3>SETUP SIMULATED TIMING</h3>";
   htm += "<form action=\"/\"><table>";
 
   htm += "<tr><td>calstartTime (Value in &#181;s):</td><td><input type=\"number\" id=\"quantity\" name=\"val1\" min=\"1\" max=\"1200000\" value=\"";
@@ -122,6 +122,20 @@ String setupTiming(){
 }
 
 
+String manualTiming(){
+  String htm = "<div style=\"text-align:left;\" id=\"manualPanel\"><h3>MANUAL TIMING</h3>";
+  htm += "<table>";
+  htm += "<tr><td>SCY</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=0'\"></td></tr>";
+  htm += "<tr><td>CalStrt</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=1'\"></td></tr>";
+  htm += "<tr><td>CalStp</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=2'\"></td></tr>";
+  htm += "<tr><td>INJ</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=3'\"></td></tr>";
+  htm += "<tr><td>HCH</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=4'\"></td></tr>";
+  htm += "<tr><td>ECY</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=5'\"></td></tr>"; 
+  htm += "</table></div>";
+  return htm;
+}
+
+
 String opModeOption(int mode){
   String htm = "<form action=/><label for=\"opMode\"><b>Operation mode: ";
   htm += mode;
@@ -141,6 +155,11 @@ String opModeOption(int mode){
 
   if (mode==3) htm += "<option value=\"3\" selected>3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
   else htm += "<option value=\"3\">3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
+
+  htm += "</optgroup><optgroup label=\"Manual\">";
+
+  if (mode==4) htm += "<option value=\"4\" selected>4. Manual mode simulation</option>";
+  else htm += "<option value=\"4\">4. Manual mode</option>";
 
   htm += "</optgroup></select><button type=”submit”>Change</button></form>"; 
   return htm;
@@ -222,6 +241,38 @@ void htmlPage(auto client) {
     operationMode = httpFilterString(httpRequest, "opMode=");
   }
 
+
+  if (httpRequest.indexOf("manualSim=")  > 0) {
+    int val = httpFilterString(httpRequest, "manualSim=");
+    switch (val) {
+      case 0: {
+          triggerSCY();
+        }
+        break;
+      case 1: {
+          triggerCalStrt();
+        }
+        break;
+      case 2: {
+          triggerCalStp();
+        }
+        break;
+      case 3: {
+          triggerINJ();
+        }
+        break;
+      case 4: {
+          triggerHCH();
+        }
+        break;
+      case 5: {
+          triggerECY();
+        }
+        break;
+    }
+  }
+  
+
   if (httpRequest.indexOf("val1=")  > 0) {
     tempVal = httpFilterString(httpRequest, "val1=");
     noInterrupts();
@@ -300,6 +351,11 @@ void htmlPage(auto client) {
   
   htmlPage += h2_title("SETTINGS");
   htmlPage += opModeOption(operationMode);
+  
+  if (operationMode == 4){
+    htmlPage += manualTiming();
+  }
+
   htmlPage += setupTiming();
 
   htmlPage += h2_title("PLOTS");
