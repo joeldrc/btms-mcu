@@ -209,7 +209,7 @@ void buildPlot(){
       uint32_t val = traceTime[i] / 5000;     
       
       for(uint32_t cnt = 0; cnt < samplesNumber; cnt++){  
-        if ((traceTime[i] == 1) && (cnt == 0)){
+        if ((traceTime[i] > 0 && traceTime[i] < 5000) && (cnt == 0)){
           plot[i][cnt] = 1; 
         }
         else if((val == cnt) && (cnt != 0)){
