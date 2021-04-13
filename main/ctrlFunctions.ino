@@ -47,7 +47,6 @@ FASTRUN void simulatedCycle1() {
     case 0: {
         digitalWriteFast(TEN, LOW); // enable internal timing
         triggerSCY();
-
         timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
         cnt_cycle++;
       }
@@ -55,7 +54,6 @@ FASTRUN void simulatedCycle1() {
     // ECY
     case 1: {
         triggerECY();
-
         timerValue = ecyTime - scyTime; //time duration of the next cycle
       }
     // PSB cycle 1.2 sec
@@ -74,7 +72,6 @@ FASTRUN void simulatedCycle2() {
     case 0: {
         digitalWriteFast(TEN, LOW); // enable internal timing
         triggerSCY();
-
         timerValue = ecyTime - injTime; //time duration of the next cycle
         cnt_cycle++;
       }
@@ -82,7 +79,6 @@ FASTRUN void simulatedCycle2() {
     // INJ
     case 1: {
         triggerINJ();
-
         timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
         cnt_cycle++;
       }
@@ -90,7 +86,6 @@ FASTRUN void simulatedCycle2() {
     // ECY
     case 2: {
         triggerECY();
-
         timerValue = injTime - scyTime; //time duration of the next cycle
       }
     // PSB cycle 1.2 sec
@@ -109,7 +104,6 @@ FASTRUN void simulatedCycle3() {
     case 0: {
         digitalWriteFast(TEN, LOW); // enable internal timing
         triggerSCY();
-
         timerValue = calstopTime - calstartTime; // time duration of the next cycle
         cnt_cycle++;
       }
@@ -117,7 +111,6 @@ FASTRUN void simulatedCycle3() {
     // CALSTART
     case 1: {
         triggerCalStrt();
-
         timerValue = injTime - calstopTime; // time duration of the next cycle
         cnt_cycle++;
       }
@@ -125,7 +118,6 @@ FASTRUN void simulatedCycle3() {
     // CALSTOP
     case 2: {
         triggerCalStp();
-
         timerValue = hchTime - injTime; // time duration of the next cycle
         cnt_cycle++;
       }
@@ -133,7 +125,6 @@ FASTRUN void simulatedCycle3() {
     // INJ
     case 3: {
         triggerINJ();
-
         timerValue = ecyTime - hchTime; // time duration of the next cycle
         cnt_cycle++;
       }
@@ -141,7 +132,6 @@ FASTRUN void simulatedCycle3() {
     // HCH
     case 4: {
         triggerHCH();
-
         timerValue = psTimeCycle - ecyTime; // time duration of the next cycle
         cnt_cycle++;
       }
@@ -149,7 +139,6 @@ FASTRUN void simulatedCycle3() {
     // ECY
     case 5: {
         triggerECY();
-
         timerValue = calstartTime - scyTime; // time duration of the next cycle
       }
     // PSB cycle 1.2 sec

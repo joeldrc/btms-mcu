@@ -117,7 +117,7 @@ String setupTiming(){
   htm += "\"></td></tr>";
   
   htm += "</table><br><input type=\"submit\" value=\"Save\"></form>";
-  htm += "<input type=\"submit\" value=\"Reset\" onclick=\"location.href='/?reset='\"></div>";
+  htm += "<input type=\"submit\" value=\"Reset\" onclick=\"location.href='/?reset='\"><br><br></div>";
   return htm;
 }
 
@@ -158,7 +158,7 @@ String opModeOption(int mode){
 
   htm += "</optgroup><optgroup label=\"Manual\">";
 
-  if (mode==4) htm += "<option value=\"4\" selected>4. Manual mode simulation</option>";
+  if (mode==4) htm += "<option value=\"4\" selected>4. Manual mode</option>";
   else htm += "<option value=\"4\">4. Manual mode</option>";
 
   htm += "</optgroup></select><button type=”submit”>Change</button></form>"; 
@@ -170,7 +170,7 @@ const char footer[] PROGMEM = R"rawliteral(
 <p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
 <br>
 <footer>
-  <p><br>Version: 1.00<br><br>JD 03.2021<br><br></p>
+  <p><br>Version: 1.20<br><br>JD 04.2021<br><br></p>
 </footer>
 </body>
 </html> 
@@ -236,11 +236,62 @@ uint32_t httpFilterString(String httpRqst, String request){
 
 void htmlPage(auto client) {
   uint32_t tempVal = 0;
-  
+
   if (httpRequest.indexOf("opMode=")  > 0) {
     operationMode = httpFilterString(httpRequest, "opMode=");
   }
 
+  switch (operationMode) {
+    case 0: {
+        // Read incoming timing on the interrupts
+        noInterrupts();
+        traceTime[0] = startOfcycle;
+        traceTime[1] = calStart;
+        traceTime[2] = calStop;
+        traceTime[3] = 0xFFFFFFFF;      // no INJ signal
+        traceTime[4] = harmonicChange;
+        traceTime[5] = endOfCycle;
+        interrupts();
+      }
+      break;
+    case 1: {
+        // Read simulated cycle
+        traceTime[0] = scyTime;
+        traceTime[1] = 0xFFFFFFFF;
+        traceTime[2] = 0xFFFFFFFF;
+        traceTime[3] = 0xFFFFFFFF;
+        traceTime[4] = 0xFFFFFFFF;
+        traceTime[5] = ecyTime;
+      }
+      break;
+    case 2: {
+        // Read simulated cycle
+        traceTime[0] = scyTime;
+        traceTime[1] = 0xFFFFFFFF;
+        traceTime[2] = 0xFFFFFFFF;
+        traceTime[3] = injTime;
+        traceTime[4] = 0xFFFFFFFF;
+        traceTime[5] = ecyTime;
+      }
+      break;
+    case 3: {
+        // Read simulated cycle
+        traceTime[0] = scyTime;
+        traceTime[1] = calstartTime;
+        traceTime[2] = calstopTime;
+        traceTime[3] = injTime;
+        traceTime[4] = hchTime;
+        traceTime[5] = ecyTime;
+      }
+      break;
+    case 4: {
+        // Reset simulated cycle plot values
+        for (uint8_t i = 0; i < numTraces; i++) {
+          traceTime[i] = 0xFFFFFFFF;
+        }
+      }
+      break;
+  }
 
   if (httpRequest.indexOf("manualSim=")  > 0) {
     int val = httpFilterString(httpRequest, "manualSim=");
@@ -272,7 +323,6 @@ void htmlPage(auto client) {
     }
   }
   
-
   if (httpRequest.indexOf("val1=")  > 0) {
     tempVal = httpFilterString(httpRequest, "val1=");
     noInterrupts();
@@ -316,6 +366,7 @@ void htmlPage(auto client) {
     interrupts();
   }
   
+   
   // Start html
   String htmlPage = "";
   htmlPage += "HTTP/1.1 200 OK";
@@ -351,44 +402,46 @@ void htmlPage(auto client) {
   
   htmlPage += h2_title("SETTINGS");
   htmlPage += opModeOption(operationMode);
+
+  htmlPage += setupTiming();
   
   if (operationMode == 4){
     htmlPage += manualTiming();
   }
-
-  htmlPage += setupTiming();
-
-  htmlPage += h2_title("PLOTS");
-  buildPlot();
-  
-  String html_2 = "<div class=\"resizable\"><table>";
-  html_2 += "<tr><th> </th><th>Time in &#181;s</th><th>Time scale in ms</th></tr>"; 
-  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
-    html_2 += "<tr><th>";
-    html_2 += traceName[cnt];
-    html_2 += "</th><td>";
-    html_2 += traceTime[cnt];
-    html_2 += "</td><td><pre>";  
-    for (uint32_t i = 0; i < samplesNumber; i++) {
-      if (plot[cnt][i]) {
-        html_2 += asciiFilledSquare;
-      }
-      else {
-        html_2 += asciiSpace;
+  else { 
+    htmlPage += h2_title("PLOTS");
+    buildPlot();
+    
+    String html_2 = "<div class=\"resizable\"><table>";
+    html_2 += "<tr><th> </th><th>Time in &#181;s</th><th>Time scale in ms</th></tr>"; 
+    for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
+      if (traceTime[cnt] < 0xFFFFFFFF){
+        html_2 += "<tr><th>";
+        html_2 += traceName[cnt];
+        html_2 += "</th><td>";
+        html_2 += traceTime[cnt];
+        html_2 += "</td><td><pre>";  
+        for (uint32_t i = 0; i < samplesNumber; i++) {
+          if (plot[cnt][i]) {
+            html_2 += asciiFilledSquare;
+          }
+          else {
+            html_2 += asciiSpace;
+          }
+        }
+        html_2 += "\n";  
+        /*
+          for (uint32_t i = 0; i < samplesNumber; i++) {
+          htmlPage2 += plot[cnt][i];
+          }
+          htmlPage2 += "\n";
+        */
+        html_2 += "</pre></td></tr>";
       }
     }
-    html_2 += "\n";  
-    /*
-      for (uint32_t i = 0; i < samplesNumber; i++) {
-      htmlPage2 += plot[cnt][i];
-      }
-      htmlPage2 += "\n";
-    */
-    html_2 += "</pre></td></tr>";
+    html_2 += "</table><br></div>";
+    htmlPage += html_2; 
   }
-  html_2 += "</table><br></div>";
-
-  htmlPage += html_2; 
   htmlPage += footer;
 
   // send html page
