@@ -205,21 +205,26 @@ String h2_title(String title){
 
 void buildPlot(){
   for(uint8_t i=0; i < numTraces; i++){
+    uint32_t val = 0;      
     if (traceTime[i] < psTimeCycle){
-      uint32_t val = traceTime[i] / 5000;     
-      
-      for(uint32_t cnt = 0; cnt < samplesNumber; cnt++){  
-        if ((traceTime[i] == 1) && (cnt == 0)){
-          plot[i][cnt] = 1; 
-        }
-        else if((val == cnt) && (cnt != 0)){
-          plot[i][cnt] = 1;         
-        }
-        else{
-          plot[i][cnt] = 0;
-        } 
-      }     
+      val = ceil(traceTime[i] / 4999.0);  // 4999 so 5000 will be rounded to 2 with the function ceil
     }
+    else {
+      val = 0;
+    }
+
+    for(uint32_t cnt = 0; cnt < samplesNumber; cnt++){  
+      plot[i][cnt] = 0;
+    }
+    
+    if (val > 0) {
+      val--;
+      for(uint32_t cnt = 0; cnt < samplesNumber; cnt++){  
+        if (val == cnt){
+          plot[i][cnt] = 1;
+        }
+      }
+    }    
   }
 }
 
