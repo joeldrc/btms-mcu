@@ -35,6 +35,7 @@ uint8_t mac[] = { 0xDA, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 // 1: simulate SCY and ECY
 // 2: simulate SCY, INJ and ECY
 // 3: simulate SCY, CALSTATR, CALSTOP, INJ, HCH and ECY
+// 4: manual mode
 volatile int32_t operationMode = 0;
 
 // digital values for the web page
@@ -50,8 +51,8 @@ volatile float v4 = 0;
 
 // plot for web page
 const uint32_t samplesNumber = 240; // 1200 milliseconds / 5 = 240 samples
-const uint8_t numTraces = 5;
-const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"HCH"}, {"ECY"}};
+const uint8_t numTraces = 6;
+const char traceName[numTraces][10] = {{"SCY"}, {"CALSTRT"}, {"CALSTOP"}, {"INJ"}, {"HCH"}, {"ECY"}};
 
 volatile uint32_t traceTime[numTraces] = {0};
 volatile bool plot[numTraces][samplesNumber] = {0};
@@ -209,18 +210,22 @@ void heartBeatThread() {
 
     switch (operationMode) {
       case 0: {
-          val = 0b10000000;
+          val = 0b00000000;
         }
         break;
       case 1: {
-          val = 0b11000000;
+          val = 0b10000000;
         }
         break;
       case 2: {
-          val = 0b11100000;
+          val = 0b11000000;
         }
         break;
       case 3: {
+          val = 0b11100000;
+        }
+        break;
+      case 4: {
           val = 0b11110000;
         }
         break;
@@ -405,6 +410,18 @@ void setup() {
 
 
 void loop() {
+  // Check buttons
+  if (pushbutton1.update()) {
+    if (pushbutton1.fallingEdge()) {
+      operationMode++;
+    }
+  }
+  if (pushbutton2.update()) {
+    if (pushbutton2.fallingEdge()) {
+      operationMode--;
+    }
+  }
+
   // operationMode selection
   static int32_t previousSetting = -1;
   if (previousSetting != operationMode) {
@@ -430,69 +447,21 @@ void loop() {
           simulatedTiming.begin(simulatedCycle3, 1000);
         }
         break;
+      case 4: {
+          digitalWriteFast(TEN, LOW);   // disable external timings
+          simulatedTiming.end();
+        }
+        break;
       default: {
-          digitalWriteFast(TEN, HIGH); // enable external timings
+          digitalWriteFast(TEN, HIGH);  // enable external timings
           simulatedTiming.end();
           operationMode = 0;
         }
         break;
     }
-    Serial.print("Operation mode: ");
-    Serial.println(operationMode);
+    //Serial.print("Operation mode: ");
+    //Serial.println(operationMode);
     previousSetting = operationMode;
-  }
-
-  switch (operationMode) {
-    case 1: {
-        // Read simulated cycle
-        traceTime[0] = scyTime;
-        traceTime[1] = 0;
-        traceTime[2] = 0;
-        traceTime[3] = 0;
-        traceTime[4] = ecyTime;
-      }
-      break;
-    case 2: {
-        // Read simulated cycle
-        traceTime[0] = scyTime;
-        traceTime[1] = 0;
-        traceTime[2] = 0;
-        traceTime[3] = 0;
-        traceTime[4] = ecyTime;
-      }
-      break;
-    case 3: {
-        // Read simulated cycle
-        traceTime[0] = scyTime;
-        traceTime[1] = calstartTime;
-        traceTime[2] = calstopTime;
-        traceTime[3] = hchTime;
-        traceTime[4] = ecyTime;
-      }
-      break;
-    default: {
-        // Read incoming timing on the interrupts
-        noInterrupts();
-        traceTime[0] = startOfcycle;
-        traceTime[1] = calStart;
-        traceTime[2] = calStop;
-        traceTime[3] = harmonicChange;
-        traceTime[4] = endOfCycle;
-        interrupts();
-      }
-      break;
-  }
-
-  // Check buttons
-  if (pushbutton1.update()) {
-    if (pushbutton1.fallingEdge()) {
-      operationMode++;
-    }
-  }
-  if (pushbutton2.update()) {
-    if (pushbutton2.fallingEdge()) {
-      operationMode--;
-    }
   }
 
   // Handle webServer
