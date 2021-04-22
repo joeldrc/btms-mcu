@@ -6,7 +6,8 @@
  ******************************************************************************
   Board:
     - Developped on teensy 4.1
-    - CPU speed 600MHz
+    - CPU speed: 600MHz
+    - Optimize: Faster
   Info programming:
     -
   References C++:

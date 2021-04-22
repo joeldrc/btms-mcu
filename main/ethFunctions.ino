@@ -1,5 +1,8 @@
 
 
+const char softwareVersion[] = "1.30";
+const char softwareUpdate[] = "04.2021";
+
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
@@ -166,17 +169,6 @@ String opModeOption(int mode){
 }
 
 
-const char footer[] PROGMEM = R"rawliteral(
-<p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
-<br>
-<footer>
-  <p><br>Version: 1.20<br><br>JD 04.2021<br><br></p>
-</footer>
-</body>
-</html> 
-)rawliteral";
-
-
 String h1_title(int val){
   String htm = "<div style=\"background-color:LightBlue;padding:15px;text-align:center;\"><h1>BTMS MCU #";
   htm += val;
@@ -256,6 +248,13 @@ void htmlPage(auto client) {
         traceTime[3] = 0xFFFFFFFF;      // no INJ signal
         traceTime[4] = harmonicChange;
         traceTime[5] = endOfCycle;
+
+        // Reset values
+        startOfcycle = 0; 
+        calStart = 0;
+        calStop = 0;
+        harmonicChange = 0;
+        endOfCycle = 0;
         interrupts();
       }
       break;
@@ -447,7 +446,14 @@ void htmlPage(auto client) {
     html_2 += "</table><br></div>";
     htmlPage += html_2; 
   }
-  htmlPage += footer;
+
+  // Footer
+  htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
+  htmlPage += "<br><footer><p><br>Version: ";
+  htmlPage += softwareVersion;
+  htmlPage += "<br><br>JD ";
+  htmlPage += softwareUpdate;
+  htmlPage += "<br><br></p></footer></body></html>";
 
   // send html page
   client.println(htmlPage);
