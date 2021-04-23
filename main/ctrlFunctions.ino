@@ -1,9 +1,5 @@
 
 
-volatile uint32_t timerValue = 0;
-volatile uint8_t cnt_cycle = 0;
-
-
 FASTRUN void triggerSCY() {
   digitalWriteFast(SSCY, LOW);
   delayMicroseconds(pulseTime);
@@ -41,110 +37,71 @@ FASTRUN void triggerECY() {
 }
 
 
-FASTRUN void simulatedCycle1() {
+FASTRUN void simulatedCycle() {
   switch (cnt_cycle) {
     // SCY
     case 0: {
-        digitalWriteFast(TEN, LOW); // enable internal timing
+        simulatedTiming.begin(simulatedCycle, calstartTime); // time before the next cycle
         triggerSCY();
-        timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
-        cnt_cycle++;
-      }
-      break;
-    // ECY
-    case 1: {
-        triggerECY();
-        timerValue = ecyTime - scyTime; //time duration of the next cycle
-      }
-    // PSB cycle 1.2 sec
-    default: {
-        cnt_cycle = 0;
-      }
-      break;
-  }
-  simulatedTiming.update(timerValue);
-}
 
-
-FASTRUN void simulatedCycle2() {
-  switch (cnt_cycle) {
-    // SCY
-    case 0: {
-        digitalWriteFast(TEN, LOW); // enable internal timing
-        triggerSCY();
-        timerValue = ecyTime - injTime; //time duration of the next cycle
-        cnt_cycle++;
-      }
-      break;
-    // INJ
-    case 1: {
-        triggerINJ();
-        timerValue = psTimeCycle - ecyTime; //time duration of the next cycle
-        cnt_cycle++;
-      }
-      break;
-    // ECY
-    case 2: {
-        triggerECY();
-        timerValue = injTime - scyTime; //time duration of the next cycle
-      }
-    // PSB cycle 1.2 sec
-    default: {
-        cnt_cycle = 0;
-      }
-      break;
-  }
-  simulatedTiming.update(timerValue);
-}
-
-
-FASTRUN void simulatedCycle3() {
-  switch (cnt_cycle) {
-    // SCY
-    case 0: {
-        digitalWriteFast(TEN, LOW); // enable internal timing
-        triggerSCY();
-        timerValue = calstopTime - calstartTime; // time duration of the next cycle
+        // Status leds
+        digitalWriteFast(StsLed1, LOW);
+        digitalWriteFast(StsLed2, LOW);
+        digitalWriteFast(StsLed3, LOW);
+        digitalWriteFast(StsLed4, LOW);
         cnt_cycle++;
       }
       break;
     // CALSTART
     case 1: {
-        triggerCalStrt();
-        timerValue = injTime - calstopTime; // time duration of the next cycle
+        simulatedTiming.begin(simulatedCycle, calstopTime - calstartTime); // time before the next cycle
+        if (calStartSimulation) {
+          triggerCalStrt();
+        }
         cnt_cycle++;
       }
       break;
     // CALSTOP
     case 2: {
-        triggerCalStp();
-        timerValue = hchTime - injTime; // time duration of the next cycle
+        simulatedTiming.begin(simulatedCycle, injTime - calstopTime); // time before the next cycle
+        if (calStopSimulation) {
+          triggerCalStp();
+        }
         cnt_cycle++;
       }
       break;
     // INJ
     case 3: {
-        triggerINJ();
-        timerValue = ecyTime - hchTime; // time duration of the next cycle
+        simulatedTiming.begin(simulatedCycle, hchTime - injTime); // time before the next cycle
+        if (injSimulation) {
+          triggerINJ();
+        }
         cnt_cycle++;
       }
       break;
     // HCH
     case 4: {
-        triggerHCH();
-        timerValue = psTimeCycle - ecyTime; // time duration of the next cycle
+        simulatedTiming.begin(simulatedCycle, ecyTime - hchTime); // time before the next cycle
+        if (hchSimulation) {
+          triggerHCH();
+        }
         cnt_cycle++;
       }
       break;
     // ECY
     case 5: {
+        simulatedTiming.begin(simulatedCycle, psTimeCycle - ecyTime); // time before the next cycle
         triggerECY();
-        timerValue = calstartTime - scyTime; // time duration of the next cycle
+
+        // Status leds
+        digitalWriteFast(StsLed1, HIGH);
+        digitalWriteFast(StsLed2, HIGH);
+        digitalWriteFast(StsLed3, HIGH);
+        digitalWriteFast(StsLed4, HIGH);
       }
     // PSB cycle 1.2 sec
     default: {
         cnt_cycle = 0;
       }
   }
-  simulatedTiming.update(timerValue);
 }

@@ -1,5 +1,8 @@
 
 
+const char softwareVersion[] = "2.00";
+const char softwareUpdate[] = "04.2021";
+
 const char asciiFilledSquare[] = "&#9608;"; //'█';
 const char asciiSpace[] = "_";              //'_';
 
@@ -124,14 +127,36 @@ String setupTiming(){
 
 String manualTiming(){
   String htm = "<div style=\"text-align:left;\" id=\"manualPanel\"><h3>MANUAL TIMING</h3>";
-  htm += "<table>";
-  htm += "<tr><td>SCY</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=0'\"></td></tr>";
-  htm += "<tr><td>CalStrt</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=1'\"></td></tr>";
-  htm += "<tr><td>CalStp</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=2'\"></td></tr>";
-  htm += "<tr><td>INJ</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=3'\"></td></tr>";
-  htm += "<tr><td>HCH</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=4'\"></td></tr>";
-  htm += "<tr><td>ECY</td><td><input type=\"submit\" value=\"Simulate\" onclick=\"location.href='/?manualSim=5'\"></td></tr>"; 
-  htm += "</table></div>";
+  htm += "<form action=\"/\"><table>";
+  htm += "<tr><td><input type=\"checkbox\" onclick=\"return false;\" checked></td><td>SCY</td>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim0'\"></td></tr>";
+  
+  htm += "<tr><td><input type=\"checkbox\" name=\"CalStrt\"";
+  if (calStartSimulation) htm += "checked";
+  htm += "></td><td>CalStrt</td>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim1'\"></td></tr>";
+  
+  htm += "<tr><td><input type=\"checkbox\" name=\"CalStp\"";
+  if (calStopSimulation) htm += "checked";
+  htm += "></td><td>CalStp</td>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim2'\"></td></tr>";
+  
+  htm += "<tr><td><input type=\"checkbox\" name=\"INJ\"";
+  if (injSimulation) htm += "checked";
+  htm += "></td><td>INJ</td>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim3'\"></td></tr>";
+  
+  htm += "<tr><td><input type=\"checkbox\" name=\"HCH\"";
+  if (hchSimulation) htm += "checked";
+  htm += "></td><td>HCH</td>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim4'\"></td></tr>";
+  
+  htm += "<tr><td><input type=\"checkbox\" onclick=\"return false;\" checked></td><td>ECY</td>"; 
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim5'\"></td></tr>";
+  
+  htm += "</table><br>Continuous running: <input type=\"submit\" name=\"continuousRunning\" value=\"";
+  htm += continuousRunning;
+  htm += "\"></form></div>";
   return htm;
 }
 
@@ -153,8 +178,8 @@ String opModeOption(int mode){
   if (mode==2) htm += "<option value=\"2\" selected>2. Simulate SCY, INJ and ECY</option>";
   else htm += "<option value=\"2\">2. Simulate SCY, INJ and ECY</option>";
 
-  if (mode==3) htm += "<option value=\"3\" selected>3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
-  else htm += "<option value=\"3\">3. Simulate SCY, CALSTART, CALSTOP, INJ, HCH and ECY</option>";
+  if (mode==3) htm += "<option value=\"3\" selected>3. Simulate SCY, CALSTART, CALSTOP, INJ and ECY</option>";
+  else htm += "<option value=\"3\">3. Simulate SCY, CALSTART, CALSTOP, INJ and ECY</option>";
 
   htm += "</optgroup><optgroup label=\"Manual\">";
 
@@ -164,17 +189,6 @@ String opModeOption(int mode){
   htm += "</optgroup></select><button type=”submit”>Change</button></form>"; 
   return htm;
 }
-
-
-const char footer[] PROGMEM = R"rawliteral(
-<p><input type="button" value="Refresh" onclick = "location.href='/?refresh'"></p>
-<br>
-<footer>
-  <p><br>Version: 1.20<br><br>JD 04.2021<br><br></p>
-</footer>
-</body>
-</html> 
-)rawliteral";
 
 
 String h1_title(int val){
@@ -242,92 +256,29 @@ uint32_t httpFilterString(String httpRqst, String request){
 void htmlPage(auto client) {
   uint32_t tempVal = 0;
 
+  // Read incoming timing on the interrupts
+  noInterrupts();
+  traceTime[0] = startOfcycle;
+  traceTime[1] = calStart;
+  traceTime[2] = calStop;
+  traceTime[3] = 0xFFFFFFFF;      // no INJ signal
+  traceTime[4] = harmonicChange;
+  traceTime[5] = endOfCycle;
+
+  // Reset values
+  startOfcycle = 0;
+  calStart = 0;
+  calStop = 0;
+  harmonicChange = 0;
+  endOfCycle = 0;
+  interrupts();
+
+  // check http requests
   if (httpRequest.indexOf("opMode=")  > 0) {
     operationMode = httpFilterString(httpRequest, "opMode=");
+    selectOperationMode();
   }
 
-  switch (operationMode) {
-    case 0: {
-        // Read incoming timing on the interrupts
-        noInterrupts();
-        traceTime[0] = startOfcycle;
-        traceTime[1] = calStart;
-        traceTime[2] = calStop;
-        traceTime[3] = 0xFFFFFFFF;      // no INJ signal
-        traceTime[4] = harmonicChange;
-        traceTime[5] = endOfCycle;
-        interrupts();
-      }
-      break;
-    case 1: {
-        // Read simulated cycle
-        traceTime[0] = scyTime;
-        traceTime[1] = 0xFFFFFFFF;
-        traceTime[2] = 0xFFFFFFFF;
-        traceTime[3] = 0xFFFFFFFF;
-        traceTime[4] = 0xFFFFFFFF;
-        traceTime[5] = ecyTime;
-      }
-      break;
-    case 2: {
-        // Read simulated cycle
-        traceTime[0] = scyTime;
-        traceTime[1] = 0xFFFFFFFF;
-        traceTime[2] = 0xFFFFFFFF;
-        traceTime[3] = injTime;
-        traceTime[4] = 0xFFFFFFFF;
-        traceTime[5] = ecyTime;
-      }
-      break;
-    case 3: {
-        // Read simulated cycle
-        traceTime[0] = scyTime;
-        traceTime[1] = calstartTime;
-        traceTime[2] = calstopTime;
-        traceTime[3] = injTime;
-        traceTime[4] = hchTime;
-        traceTime[5] = ecyTime;
-      }
-      break;
-    case 4: {
-        // Reset simulated cycle plot values
-        for (uint8_t i = 0; i < numTraces; i++) {
-          traceTime[i] = 0xFFFFFFFF;
-        }
-      }
-      break;
-  }
-
-  if (httpRequest.indexOf("manualSim=")  > 0) {
-    int val = httpFilterString(httpRequest, "manualSim=");
-    switch (val) {
-      case 0: {
-          triggerSCY();
-        }
-        break;
-      case 1: {
-          triggerCalStrt();
-        }
-        break;
-      case 2: {
-          triggerCalStp();
-        }
-        break;
-      case 3: {
-          triggerINJ();
-        }
-        break;
-      case 4: {
-          triggerHCH();
-        }
-        break;
-      case 5: {
-          triggerECY();
-        }
-        break;
-    }
-  }
-  
   if (httpRequest.indexOf("val1=")  > 0) {
     tempVal = httpFilterString(httpRequest, "val1=");
     noInterrupts();
@@ -357,6 +308,73 @@ void htmlPage(auto client) {
     noInterrupts();
     ecyTime = tempVal;
     interrupts();
+  }
+
+  if (httpRequest.indexOf("continuousRunning")  > 0) {
+    continuousRunning = !continuousRunning;
+    if (!continuousRunning){
+      simulatedTiming.end();
+
+      noInterrupts();
+      calStartSimulation = false;
+      calStopSimulation = false;
+      injSimulation = false;
+      hchSimulation = false;
+      interrupts();
+    }
+    else{
+      noInterrupts();
+      cnt_cycle = 0;
+      interrupts();
+      simulatedCycle();
+    }       
+  }
+
+  if (!continuousRunning) {
+    if (httpRequest.indexOf("manualSim0")  > 0) {
+      triggerSCY(); 
+    }
+    else if (httpRequest.indexOf("manualSim1")  > 0) {
+      triggerCalStrt();
+    }
+    else if (httpRequest.indexOf("manualSim2")  > 0) {
+      triggerCalStp();
+    }
+    else if (httpRequest.indexOf("manualSim3")  > 0) {
+      triggerINJ();
+    }
+    else if (httpRequest.indexOf("manualSim4")  > 0) {
+      triggerHCH();
+    }
+    else if (httpRequest.indexOf("manualSim5")  > 0) {
+      triggerECY();
+    }
+    digitalWriteFast(StsLed1, LOW);
+    digitalWriteFast(StsLed2, LOW);
+    digitalWriteFast(StsLed3, LOW);
+    digitalWriteFast(StsLed4, LOW);
+  }
+  else {
+    if (httpRequest.indexOf("CalStrt=on")  > 0) {
+      noInterrupts();
+      calStartSimulation = true;
+      interrupts();
+    }
+    if (httpRequest.indexOf("CalStp=on")  > 0) {    
+      noInterrupts();
+      calStopSimulation = true;
+      interrupts();
+    }
+    if (httpRequest.indexOf("INJ=on")  > 0) {
+      noInterrupts();
+      injSimulation = true;
+      interrupts();
+    }
+    if (httpRequest.indexOf("HCH=on")  > 0) {
+      noInterrupts();
+      hchSimulation = true;
+      interrupts();
+    }
   }
 
   if (httpRequest.indexOf("reset=")  > 0) {
@@ -413,41 +431,48 @@ void htmlPage(auto client) {
   if (operationMode == 4){
     htmlPage += manualTiming();
   }
-  else { 
-    htmlPage += h2_title("PLOTS");
-    buildPlot();
-    
-    String html_2 = "<div class=\"resizable\"><table>";
-    html_2 += "<tr><th> </th><th>Time in &#181;s</th><th>Time scale in ms</th></tr>"; 
-    for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
-      if (traceTime[cnt] < 0xFFFFFFFF){
-        html_2 += "<tr><th>";
-        html_2 += traceName[cnt];
-        html_2 += "</th><td>";
-        html_2 += traceTime[cnt];
-        html_2 += "</td><td><pre>";  
-        for (uint32_t i = 0; i < samplesNumber; i++) {
-          if (plot[cnt][i]) {
-            html_2 += asciiFilledSquare;
-          }
-          else {
-            html_2 += asciiSpace;
-          }
+
+  htmlPage += h2_title("PLOTS");
+  buildPlot();
+  
+  String html_2 = "<div class=\"resizable\"><table>";
+  html_2 += "<tr><th> </th><th>Time in &#181;s</th><th>Time scale in ms</th></tr>"; 
+  for (uint8_t cnt = 0; cnt < numTraces; cnt++) {
+    if (traceTime[cnt] < 0xFFFFFFFF){
+      html_2 += "<tr><th>";
+      html_2 += traceName[cnt];
+      html_2 += "</th><td>";
+      html_2 += traceTime[cnt];
+      html_2 += "</td><td><pre>";  
+      for (uint32_t i = 0; i < samplesNumber; i++) {
+        if (plot[cnt][i]) {
+          html_2 += asciiFilledSquare;
         }
-        html_2 += "\n";  
-        /*
-          for (uint32_t i = 0; i < samplesNumber; i++) {
-          htmlPage2 += plot[cnt][i];
-          }
-          htmlPage2 += "\n";
-        */
-        html_2 += "</pre></td></tr>";
+        else {
+          html_2 += asciiSpace;
+        }
       }
+      html_2 += "\n";  
+      /*
+        for (uint32_t i = 0; i < samplesNumber; i++) {
+        htmlPage2 += plot[cnt][i];
+        }
+        htmlPage2 += "\n";
+      */
+      html_2 += "</pre></td></tr>";
     }
-    html_2 += "</table><br></div>";
-    htmlPage += html_2; 
   }
-  htmlPage += footer;
+  html_2 += "</table><br></div>";
+  htmlPage += html_2; 
+  
+
+  // Footer
+  htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
+  htmlPage += "<br><footer><p><br>Version: ";
+  htmlPage += softwareVersion;
+  htmlPage += "<br><br>JD ";
+  htmlPage += softwareUpdate;
+  htmlPage += "<br><br></p></footer></body></html>";
 
   // send html page
   client.println(htmlPage);
