@@ -129,30 +129,30 @@ String manualTiming(){
   String htm = "<div style=\"text-align:left;\" id=\"manualPanel\"><h3>MANUAL TIMING</h3>";
   htm += "<form action=\"/\"><table>";
   htm += "<tr><td><input type=\"checkbox\" onclick=\"return false;\" checked></td><td>SCY</td>";
-  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" onclick=\"location.href='/?manualSim=0'\"></td></tr>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim0'\"></td></tr>";
   
   htm += "<tr><td><input type=\"checkbox\" name=\"CalStrt\"";
   if (calStartSimulation) htm += "checked";
   htm += "></td><td>CalStrt</td>";
-  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" onclick=\"location.href='/?manualSim=1'\"></td></tr>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim1'\"></td></tr>";
   
   htm += "<tr><td><input type=\"checkbox\" name=\"CalStp\"";
   if (calStopSimulation) htm += "checked";
   htm += "></td><td>CalStp</td>";
-  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" onclick=\"location.href='/?manualSim=2'\"></td></tr>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim2'\"></td></tr>";
   
   htm += "<tr><td><input type=\"checkbox\" name=\"INJ\"";
   if (injSimulation) htm += "checked";
   htm += "></td><td>INJ</td>";
-  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" onclick=\"location.href='/?manualSim=3'\"></td></tr>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim3'\"></td></tr>";
   
   htm += "<tr><td><input type=\"checkbox\" name=\"HCH\"";
   if (hchSimulation) htm += "checked";
   htm += "></td><td>HCH</td>";
-  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" onclick=\"location.href='/?manualSim=4'\"></td></tr>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim4'\"></td></tr>";
   
   htm += "<tr><td><input type=\"checkbox\" onclick=\"return false;\" checked></td><td>ECY</td>"; 
-  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" onclick=\"location.href='/?manualSim=5'\"></td></tr>";
+  if (!continuousRunning) htm += "<td><input type=\"submit\" value=\"Simulate once\" name=\"manualSim5'\"></td></tr>";
   
   htm += "</table><br>Continuous running: <input type=\"submit\" name=\"continuousRunning\" value=\"";
   htm += continuousRunning;
@@ -279,36 +279,6 @@ void htmlPage(auto client) {
     selectOperationMode();
   }
 
-  if ((httpRequest.indexOf("manualSim=")  > 0) && (continuousRunning == false)) {
-    int val = httpFilterString(httpRequest, "manualSim=");
-    switch (val) {
-      case 0: {
-          triggerSCY();
-        }
-        break;
-      case 1: {
-          triggerCalStrt();
-        }
-        break;
-      case 2: {
-          triggerCalStp();
-        }
-        break;
-      case 3: {
-          triggerINJ();
-        }
-        break;
-      case 4: {
-          triggerHCH();
-        }
-        break;
-      case 5: {
-          triggerECY();
-        }
-        break;
-    }
-  }
-  
   if (httpRequest.indexOf("val1=")  > 0) {
     tempVal = httpFilterString(httpRequest, "val1=");
     noInterrupts();
@@ -357,11 +327,34 @@ void htmlPage(auto client) {
       cnt_cycle = 0;
       interrupts();
       simulatedCycle();
-    }
-       
+    }       
   }
 
-  if (continuousRunning) {
+  if (!continuousRunning) {
+    if (httpRequest.indexOf("manualSim0")  > 0) {
+      triggerSCY(); 
+    }
+    else if (httpRequest.indexOf("manualSim1")  > 0) {
+      triggerCalStrt();
+    }
+    else if (httpRequest.indexOf("manualSim2")  > 0) {
+      triggerCalStp();
+    }
+    else if (httpRequest.indexOf("manualSim3")  > 0) {
+      triggerINJ();
+    }
+    else if (httpRequest.indexOf("manualSim4")  > 0) {
+      triggerHCH();
+    }
+    else if (httpRequest.indexOf("manualSim5")  > 0) {
+      triggerECY();
+    }
+    digitalWriteFast(StsLed1, LOW);
+    digitalWriteFast(StsLed2, LOW);
+    digitalWriteFast(StsLed3, LOW);
+    digitalWriteFast(StsLed4, LOW);
+  }
+  else {
     if (httpRequest.indexOf("CalStrt=on")  > 0) {
       noInterrupts();
       calStartSimulation = true;
@@ -382,12 +375,6 @@ void htmlPage(auto client) {
       hchSimulation = true;
       interrupts();
     }
-  }
-  else{
-    digitalWriteFast(StsLed1, LOW);
-    digitalWriteFast(StsLed2, LOW);
-    digitalWriteFast(StsLed3, LOW);
-    digitalWriteFast(StsLed4, LOW); 
   }
 
   if (httpRequest.indexOf("reset=")  > 0) {
